@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
@@ -23,5 +24,13 @@ export class UserController {
     const user = await this.userServices.createUser(data);
 
     return response.json(user);
+  }
+
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  async listUsers(@Res() response: Response): Promise<Response<UserDto[]>> {
+    const users = await this.userServices.listUsers();
+
+    return response.json(users);
   }
 }
