@@ -17,6 +17,8 @@ model User {
   email String @unique
   password String
   resetToken String?
+  createdAt DateTime
+  updatedAt DateTime?
   posts Post[]
   comments Comments[]
 }

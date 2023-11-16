@@ -10,11 +10,13 @@ import {
 import { Response } from 'express';
 import { UserServices } from './user.service';
 import { UserDto } from './dto/user.dto';
+import { IsPublic } from 'src/auth/decorators/is-public.decorator';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userServices: UserServices) {}
 
+  @IsPublic()
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async createUser(
@@ -26,6 +28,7 @@ export class UserController {
     return response.json(user);
   }
 
+  @IsPublic()
   @Get()
   @HttpCode(HttpStatus.OK)
   async listUsers(@Res() response: Response): Promise<Response<UserDto[]>> {

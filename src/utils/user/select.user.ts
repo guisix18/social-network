@@ -4,4 +4,6 @@ export const select = {
   email: true,
   password: false,
   resetToken: false,
+  createdAt: true,
+  posts: true,
 };

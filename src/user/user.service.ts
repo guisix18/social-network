@@ -16,6 +16,7 @@ export class UserServices {
       name: dto.name,
       email: dto.email,
       password: bcrypt.hashSync(dto.password, 8),
+      createdAt: new Date(),
     };
 
     const user = await this.prisma.user.create({
@@ -32,5 +33,13 @@ export class UserServices {
     });
 
     return users;
+  }
+
+  async findByEmail(email: string): Promise<UserDto> {
+    return await this.prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
   }
 }

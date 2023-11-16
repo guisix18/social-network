@@ -27,7 +27,7 @@ export class UserDto {
   @IsString()
   resetToken?: string;
 
-  posts?: Post | null;
+  posts?: Post[] | null;
 
-  comments?: Comments | null;
+  comments?: Comments[] | null;
 }
