@@ -4,6 +4,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { PostsDto } from './dto/posts.dto';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
+import { select } from 'src/utils/posts/select.posts';
 
 @Injectable()
 export class PostsServices {
@@ -25,8 +26,18 @@ export class PostsServices {
   }
 
   async listPosts(): Promise<PostsDto[]> {
-    const posts = await this.prisma.post.findMany({});
+    const posts = await this.prisma.post.findMany({
+      select,
+    });
 
     return posts;
+  }
+
+  async listOnePost(postId: string): Promise<PostsDto> {
+    return await this.prisma.post.findUnique({
+      where: {
+        id: postId,
+      },
+    });
   }
 }
