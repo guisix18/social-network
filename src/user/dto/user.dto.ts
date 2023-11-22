@@ -1,3 +1,4 @@
+import { OmitType, PartialType, PickType } from '@nestjs/swagger';
 import { Comments, Post } from '@prisma/client';
 import {
   IsEmail,
@@ -30,4 +31,23 @@ export class UserDto {
   posts?: Post[] | null;
 
   comments?: Comments[] | null;
+}
+
+export class UpdateUserDto {
+  @IsOptional()
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(255)
+  @MinLength(1)
+  name: string;
+
+  @IsOptional()
+  @IsNotEmpty()
+  @IsEmail()
+  email: string;
+
+  @IsOptional()
+  @IsNotEmpty()
+  @IsString()
+  password: string;
 }
