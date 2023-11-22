@@ -8,6 +8,7 @@ import { UserController } from './user.controller';
 import { UserServices } from './user.service';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { VerifyEmailAvailabilityMiddleware } from './middleware/verifyEmailAvailability.middleware';
+import { VerifyUserIdMiddleware } from './middleware/verifyUserId.middleware';
 
 @Module({
   imports: [PrismaModule],
@@ -20,5 +21,12 @@ export class UserModule implements NestModule {
     consumer
       .apply(VerifyEmailAvailabilityMiddleware)
       .forRoutes({ path: '/user', method: RequestMethod.POST });
+
+    consumer
+      .apply(VerifyUserIdMiddleware)
+      .forRoutes(
+        { path: '/user/update/:userId', method: RequestMethod.PATCH },
+        { path: '/user/deactivate/:userId', method: RequestMethod.PATCH },
+      );
   }
 }
