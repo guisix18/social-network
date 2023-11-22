@@ -27,7 +27,14 @@ export class PostsServices {
 
   async listPosts(): Promise<PostsDto[]> {
     const posts = await this.prisma.post.findMany({
-      select,
+      select: {
+        id: true,
+        content: true,
+        imageFormat: true,
+        imageUrl: true,
+        userId: true,
+        comments: true,
+      },
     });
 
     return posts;
