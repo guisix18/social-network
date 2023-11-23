@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { UserDto } from './dto/user.dto';
+import { UpdateUserDto, UserDto } from './dto/user.dto';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import * as bcrypt from 'bcrypt';
@@ -42,4 +42,22 @@ export class UserServices {
       },
     });
   }
+
+  async updateUser(data: UpdateUserDto, userId: string): Promise<UserDto> {
+    const userUpdated = await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        ...data,
+        password: data.password && bcrypt.hashSync(data.password, 8),
+        updatedAt: new Date(),
+      },
+      select,
+    });
+
+    return userUpdated;
+  }
+
+  //FAZER DESATIVAÇÃO E REATIVAÇÃO DO USUÁRIO
 }

@@ -4,12 +4,14 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
+  Patch,
   Post,
   Res,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Response, response } from 'express';
 import { UserServices } from './user.service';
-import { UserDto } from './dto/user.dto';
+import { UpdateUserDto, UserDto } from './dto/user.dto';
 import { IsPublic } from 'src/auth/decorators/is-public.decorator';
 
 @Controller('user')
@@ -35,5 +37,17 @@ export class UserController {
     const users = await this.userServices.listUsers();
 
     return response.json(users);
+  }
+
+  @Patch('/update/:userId')
+  @HttpCode(HttpStatus.OK)
+  async updateUser(
+    @Body() data: UpdateUserDto,
+    @Param('userId') userId: string,
+    @Res() response: Response,
+  ): Promise<Response<UserDto>> {
+    const updatedUser = await this.userServices.updateUser(data, userId);
+
+    return response.json(updatedUser);
   }
 }
