@@ -9,7 +9,7 @@ import {
   Res,
 } from '@nestjs/common';
 import { CommentsServices } from './comments.service';
-import { Response } from 'express';
+import { Response, response } from 'express';
 import { CommentsDto } from './dto/comments.dto';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { UserFromJwt } from 'src/auth/models/UserFromJwt';
@@ -61,5 +61,18 @@ export class CommentsController {
     );
 
     return response.json(reply);
+  }
+
+  @Get('/byPost')
+  @HttpCode(HttpStatus.OK)
+  async getCommentsByPost(
+    @Query('postId') postId: string,
+    @Res() response: Response,
+  ): Promise<Response<CommentsDto>> {
+    const commentsByPost = await this.commentsServices.getCommentsByPost(
+      postId,
+    );
+
+    return response.json(commentsByPost);
   }
 }

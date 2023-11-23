@@ -7,6 +7,7 @@ import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { select } from 'src/utils/comments/select.comments';
 import { FiltersCommentsDto } from './dto/filtersComments.dto';
+import { IComments } from './interface/comments.interface';
 
 @Injectable()
 export class CommentsServices {
@@ -55,21 +56,13 @@ export class CommentsServices {
     filters: FiltersCommentsDto,
     user: UserFromJwt,
   ) {
-    const { commentId, postId } = filters;
-
-    const comment = await this.prisma.comments.findUnique({
-      where: {
-        id: commentId,
-      },
-    });
-
-    if (!comment) throw new HttpException('Comment not found', 404);
+    const { commentId, postId, parentId } = filters;
 
     const data: Prisma.CommentsCreateInput = {
       id: randomUUID(),
       text: dto.text,
       parent: {
-        connect: { id: comment.id },
+        connect: { id: parentId ? parentId : commentId },
       },
       post: {
         connect: { id: postId },
@@ -85,7 +78,7 @@ export class CommentsServices {
 
     await this.prisma.comments.update({
       where: {
-        id: comment.id,
+        id: commentId,
       },
       data: {
         children: {
@@ -97,5 +90,42 @@ export class CommentsServices {
     });
 
     return reply;
+  }
+
+  async getCommentsByPost(postId: string): Promise<CommentsDto[]> {
+    const topLevelComments = await this.prisma.comments.findMany({
+      where: {
+        postId,
+        parentId: null,
+      },
+      include: {
+        children: {
+          include: {
+            children: true,
+          },
+        },
+      },
+    });
+
+    return topLevelComments.map((comment) => this.formatComment(comment));
+  }
+
+  private formatComment(comment: IComments) {
+    const formattedComment: IComments = {
+      id: comment.id,
+      text: comment.text,
+      userId: comment.userId,
+      postId: comment.postId,
+      parentId: comment.parentId,
+      children: [],
+    };
+
+    if (comment.children) {
+      formattedComment.children = comment.children.map((child) =>
+        this.formatComment(child),
+      );
+    }
+
+    return formattedComment;
   }
 }
