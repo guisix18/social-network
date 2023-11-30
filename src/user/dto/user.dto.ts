@@ -1,4 +1,3 @@
-import { OmitType, PartialType, PickType } from '@nestjs/swagger';
 import { Comments, Post } from '@prisma/client';
 import {
   IsEmail,
