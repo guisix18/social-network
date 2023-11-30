@@ -5,6 +5,7 @@ import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { select } from 'src/utils/user/select.user';
+import { UserRows } from './dto/userRows.dto';
 
 @Injectable()
 export class UserServices {
@@ -27,12 +28,14 @@ export class UserServices {
     return user;
   }
 
-  async listUsers(): Promise<UserDto[]> {
+  async listUsers(): Promise<UserRows> {
     const users = await this.prisma.user.findMany({
       select,
     });
 
-    return users;
+    return {
+      rows: users,
+    };
   }
 
   async findByEmail(email: string): Promise<UserDto> {
