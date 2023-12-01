@@ -1,5 +1,3 @@
-import { CommentsDto } from '../dto/comments.dto';
-
 export interface IComments {
   id: string;
   text: string;

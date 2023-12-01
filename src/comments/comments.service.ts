@@ -92,6 +92,25 @@ export class CommentsServices {
     return reply;
   }
 
+  async countCommentsByPost(postId: string): Promise<number> {
+    const post = await this.prisma.post.findUnique({
+      where: {
+        id: postId,
+      },
+      include: {
+        _count: {
+          select: {
+            comments: true,
+          },
+        },
+      },
+    });
+
+    const count = post._count.comments;
+
+    return count;
+  }
+
   async getCommentsByPost(postId: string): Promise<CommentsDto[]> {
     const topLevelComments = await this.prisma.comments.findMany({
       where: {
@@ -121,7 +140,7 @@ export class CommentsServices {
     };
 
     if (comment.children) {
-      formattedComment.children = comment.children.map((child) =>
+      formattedComment.children = comment.children.map((child: IComments) =>
         this.formatComment(child),
       );
     }
