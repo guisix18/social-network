@@ -77,7 +77,7 @@ export class CommentsController {
     return response.json(commentsByPost);
   }
 
-  @Get('/count/:postId')
+  @Get('/count/byPost/:postId')
   @HttpCode(HttpStatus.OK)
   async countCommentsByPost(
     @Param('postId') postId: string,
@@ -89,6 +89,19 @@ export class CommentsController {
 
     return response.json({
       count: countComments,
+    });
+  }
+
+  @Get('/count/byComment/:commentId')
+  @HttpCode(HttpStatus.OK)
+  async countCommentsByComment(
+    @Param('commentId') commentId: string,
+    @Res() response: Response,
+  ): Promise<Response<number>> {
+    const count = await this.commentsServices.countCommentsByComment(commentId);
+
+    return response.json({
+      count: count,
     });
   }
 }
