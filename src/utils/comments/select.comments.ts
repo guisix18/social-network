@@ -5,4 +5,6 @@ export const select = {
   postId: true,
   parentId: true,
   parent: true,
+  likes: true,
+  dislikes: true,
 };
