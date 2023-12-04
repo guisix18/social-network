@@ -27,14 +27,7 @@ export class PostsServices {
 
   async listPosts(): Promise<PostsDto[]> {
     const posts = await this.prisma.post.findMany({
-      select: {
-        id: true,
-        content: true,
-        imageFormat: true,
-        imageUrl: true,
-        userId: true,
-        comments: true,
-      },
+      select,
     });
 
     return posts;
@@ -46,5 +39,49 @@ export class PostsServices {
         id: postId,
       },
     });
+  }
+
+  async likedPost(postId: string, checked: boolean): Promise<number> {
+    const post = await this.prisma.post.findUnique({
+      where: {
+        id: postId,
+      },
+    });
+
+    const updatePostLikes = await this.prisma.post.update({
+      where: {
+        id: post.id,
+      },
+      data: {
+        likes: {
+          increment: checked ? 1 : 0,
+          decrement: !checked && post.likes > 0 ? 1 : 0,
+        },
+      },
+    });
+
+    return updatePostLikes.likes;
+  }
+
+  async dislikedPost(postId: string, checked: boolean): Promise<number> {
+    const post = await this.prisma.post.findUnique({
+      where: {
+        id: postId,
+      },
+    });
+
+    const updatePostDislikes = await this.prisma.post.update({
+      where: {
+        id: post.id,
+      },
+      data: {
+        dislikes: {
+          increment: checked ? 1 : 0,
+          decrement: !checked ? 1 : 0,
+        },
+      },
+    });
+
+    return updatePostDislikes.dislikes;
   }
 }
