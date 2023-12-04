@@ -8,6 +8,7 @@ import { randomUUID } from 'crypto';
 import { select } from 'src/utils/comments/select.comments';
 import { FiltersCommentsDto } from './dto/filtersComments.dto';
 import { IComments } from './interface/comments.interface';
+import { POST_NOT_FOUND } from 'src/utils/posts/exceptions.posts';
 
 @Injectable()
 export class CommentsServices {
@@ -24,7 +25,7 @@ export class CommentsServices {
     const post = await this.postServices.listOnePost(postId);
 
     if (!post) {
-      throw new HttpException('Post not found or do not exists', 404);
+      throw new HttpException(POST_NOT_FOUND, 404);
     }
 
     const data: Prisma.CommentsCreateInput = {
@@ -107,6 +108,25 @@ export class CommentsServices {
     });
 
     const count = post._count.comments;
+
+    return count;
+  }
+
+  async countCommentsByComment(commentId: string): Promise<number> {
+    const comment = await this.prisma.comments.findUnique({
+      where: {
+        id: commentId,
+      },
+      include: {
+        _count: {
+          select: {
+            children: true,
+          },
+        },
+      },
+    });
+
+    const count = comment._count.children;
 
     return count;
   }
