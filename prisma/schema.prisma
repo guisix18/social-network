@@ -21,6 +21,7 @@ model User {
   updatedAt DateTime?
   posts Post[]
   comments Comments[]
+  
 }
 
 model Post {
@@ -31,6 +32,8 @@ model Post {
   imageUrl String?
   imageFormat String?
   comments Comments[]
+  likes Int @default(0)
+  dislikes Int @default(0)
 }
 
 model Comments {
@@ -43,4 +46,6 @@ model Comments {
   children Comments[] @relation("ParentChild")
   parentId String?
   parent Comments? @relation("ParentChild", fields: [parentId], references: [id])
+  likes Int @default(0)
+  dislikes Int @default(0)
 }
