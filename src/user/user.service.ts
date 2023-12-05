@@ -62,5 +62,30 @@ export class UserServices {
     return userUpdated;
   }
 
-  //FAZER DESATIVAÇÃO E REATIVAÇÃO DO USUÁRIO
+  async deactivateUser(userId: string): Promise<string> {
+    const userDeactivated = await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        updatedAt: new Date(),
+        active: false,
+      },
+    });
+
+    return userDeactivated.id;
+  }
+
+  async activateUser(userId: string): Promise<string> {
+    const userActivated = await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        active: true,
+      },
+    });
+
+    return userActivated.id;
+  }
 }

@@ -13,7 +13,11 @@ import { Response, response } from 'express';
 import { UserServices } from './user.service';
 import { UpdateUserDto, UserDto } from './dto/user.dto';
 import { IsPublic } from 'src/auth/decorators/is-public.decorator';
-import { CREATED_USER } from 'src/utils/user/messages.user';
+import {
+  CREATED_USER,
+  USER_ACTIVATED,
+  USER_DEACTIVATED,
+} from 'src/utils/user/messages.user';
 import { UserRows } from './dto/userRows.dto';
 
 @Controller('user')
@@ -54,5 +58,33 @@ export class UserController {
     const updatedUser = await this.userServices.updateUser(data, userId);
 
     return response.json(updatedUser);
+  }
+
+  @Patch('/deactivate/:userId')
+  @HttpCode(HttpStatus.OK)
+  async deactivateUser(
+    @Param('userId') userId: string,
+    @Res() response: Response,
+  ): Promise<Response<string>> {
+    const deactivatedUserId = await this.userServices.deactivateUser(userId);
+
+    return response.json({
+      message: USER_DEACTIVATED,
+      userId: deactivatedUserId,
+    });
+  }
+
+  @Patch('activate/:userId')
+  @HttpCode(HttpStatus.OK)
+  async activateUser(
+    @Param('userId') userId: string,
+    @Res() response: Response,
+  ): Promise<Response<string>> {
+    const activatedUserId = await this.userServices.activateUser(userId);
+
+    return response.json({
+      message: USER_ACTIVATED,
+      userId: activatedUserId,
+    });
   }
 }

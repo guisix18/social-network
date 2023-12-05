@@ -27,6 +27,7 @@ export class UserModule implements NestModule {
       .forRoutes(
         { path: '/user/update/:userId', method: RequestMethod.PATCH },
         { path: '/user/deactivate/:userId', method: RequestMethod.PATCH },
+        { path: '/user/activate/:userId', method: RequestMethod.PATCH },
       );
   }
 }
