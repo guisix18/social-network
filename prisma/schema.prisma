@@ -19,9 +19,10 @@ model User {
   resetToken String?
   createdAt DateTime
   updatedAt DateTime?
+  active Boolean @default(true)
   posts Post[]
   comments Comments[]
-  postsLikeds PostLikeds?
+  postsLikeds PostLikeds[]
 }
 
 model Post {
@@ -32,7 +33,7 @@ model Post {
   imageUrl String?
   imageFormat String?
   comments Comments[]
-  postsLikeds PostLikeds?
+  postsLikeds PostLikeds[]
 }
 
 model Comments {
@@ -50,9 +51,9 @@ model Comments {
 model PostLikeds {
   id String @id
   user User? @relation(fields: [userId], references: [id])
-  userId String @unique
+  userId String 
   post Post? @relation(fields: [postId], references: [id])
-  postId String @unique
+  postId String 
   eventAt DateTime
   liked Boolean
 }
