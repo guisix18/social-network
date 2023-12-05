@@ -5,6 +5,7 @@ import { PostsDto } from './dto/posts.dto';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { select } from 'src/utils/posts/select.posts';
+import { PostsLikedsDto } from './dto/postsLikeds.dto';
 
 @Injectable()
 export class PostsServices {
@@ -41,7 +42,38 @@ export class PostsServices {
     });
   }
 
-  async likedPost(postId: string, user: UserFromJwt): Promise<string> {
+  async likedPost(
+    postId: string,
+    user: UserFromJwt,
+    checked: string,
+  ): Promise<PostsLikedsDto> {
+    const findLike = await this.prisma.postLikeds.findFirst({
+      where: {
+        userId: user.id,
+      },
+    });
+
+    if (findLike) {
+      if (checked === 'false') {
+        return await this.prisma.postLikeds.update({
+          where: {
+            id: findLike.id,
+          },
+          data: {
+            liked: false,
+          },
+        });
+      }
+      return await this.prisma.postLikeds.update({
+        where: {
+          id: findLike.id,
+        },
+        data: {
+          liked: true,
+        },
+      });
+    }
+
     const post = await this.prisma.post.findUnique({
       where: {
         id: postId,
@@ -60,13 +92,14 @@ export class PostsServices {
       data,
     });
 
-    return likedPost.id;
+    return likedPost;
   }
 
-  async countLikes(postId: string, user: UserFromJwt): Promise<number> {
+  async countLikes(postId: string): Promise<number> {
     const count = await this.prisma.postLikeds.count({
       where: {
         postId,
+        liked: true,
       },
     });
 

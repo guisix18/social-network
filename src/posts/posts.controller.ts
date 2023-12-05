@@ -16,6 +16,7 @@ import { UserFromJwt } from 'src/auth/models/UserFromJwt';
 import { PostsDto } from './dto/posts.dto';
 import { PostsServices } from './posts.service';
 import { FiltersPostFeedbacksDto } from './dto/filtersPostsFeedback.dto';
+import { PostsLikedsDto } from './dto/postsLikeds.dto';
 
 @Controller('posts')
 export class PostsController {
@@ -44,26 +45,24 @@ export class PostsController {
   @Patch('/like')
   @HttpCode(HttpStatus.OK)
   async likedPost(
-    @Query('postId') postId: string,
+    @Query() filters: FiltersPostFeedbacksDto,
     @CurrentUser() user: UserFromJwt,
     @Res() response: Response,
-  ): Promise<Response<number>> {
-    const likes = await this.postsServices.likedPost(postId, user);
+  ): Promise<Response<PostsLikedsDto>> {
+    const { postId, checked } = filters;
+    const likes = await this.postsServices.likedPost(postId, user, checked);
 
-    return response.json({
-      id: likes,
-    });
+    return response.json(likes);
   }
 
   @Get('/count/likes')
   @HttpCode(HttpStatus.OK)
   async countLikes(
     @Query() filters: FiltersPostFeedbacksDto,
-    @CurrentUser() user: UserFromJwt,
     @Res() response: Response,
   ) {
     const { postId } = filters;
-    const count = await this.postsServices.countLikes(postId, user);
+    const count = await this.postsServices.countLikes(postId);
 
     return response.json({ count: count });
   }
