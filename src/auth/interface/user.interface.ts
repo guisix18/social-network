@@ -2,6 +2,6 @@ export interface IUser {
   id: string;
   name: string;
   email: string;
-  isActive: boolean;
+  active: boolean;
   password: string;
 }

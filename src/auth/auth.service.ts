@@ -21,7 +21,7 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       name: user.name,
-      isActive: user.isActive,
+      active: user.active,
     };
 
     return {
