@@ -6,5 +6,6 @@ export const select = {
   password: false,
   resetToken: false,
   updatedAt: true,
+  active: true,
   posts: true,
 };
