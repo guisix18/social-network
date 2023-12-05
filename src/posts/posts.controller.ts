@@ -44,28 +44,27 @@ export class PostsController {
   @Patch('/like')
   @HttpCode(HttpStatus.OK)
   async likedPost(
-    @Query() filters: FiltersPostFeedbacksDto,
+    @Query('postId') postId: string,
+    @CurrentUser() user: UserFromJwt,
     @Res() response: Response,
   ): Promise<Response<number>> {
-    const { postId, checked } = filters;
-    const likes = await this.postsServices.likedPost(postId, checked);
+    const likes = await this.postsServices.likedPost(postId, user);
 
     return response.json({
-      likes: likes,
+      id: likes,
     });
   }
 
-  @Patch('/dislike')
+  @Get('/count/likes')
   @HttpCode(HttpStatus.OK)
-  async dislikedPost(
+  async countLikes(
     @Query() filters: FiltersPostFeedbacksDto,
+    @CurrentUser() user: UserFromJwt,
     @Res() response: Response,
-  ): Promise<Response<number>> {
-    const { postId, checked } = filters;
-    const dislikes = await this.postsServices.dislikedPost(postId, checked);
+  ) {
+    const { postId } = filters;
+    const count = await this.postsServices.countLikes(postId, user);
 
-    return response.json({
-      dislikes: dislikes,
-    });
+    return response.json({ count: count });
   }
 }

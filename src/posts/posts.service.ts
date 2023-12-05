@@ -41,47 +41,35 @@ export class PostsServices {
     });
   }
 
-  async likedPost(postId: string, checked: boolean): Promise<number> {
+  async likedPost(postId: string, user: UserFromJwt): Promise<string> {
     const post = await this.prisma.post.findUnique({
       where: {
         id: postId,
       },
     });
 
-    const updatePostLikes = await this.prisma.post.update({
-      where: {
-        id: post.id,
-      },
-      data: {
-        likes: {
-          increment: checked ? 1 : 0,
-          decrement: !checked && post.likes > 0 ? 1 : 0,
-        },
-      },
+    const data: Prisma.PostLikedsCreateInput = {
+      id: randomUUID(),
+      eventAt: new Date(),
+      liked: true,
+      user: { connect: { id: user.id } },
+      post: { connect: { id: post.id } },
+    };
+
+    const likedPost = await this.prisma.postLikeds.create({
+      data,
     });
 
-    return updatePostLikes.likes;
+    return likedPost.id;
   }
 
-  async dislikedPost(postId: string, checked: boolean): Promise<number> {
-    const post = await this.prisma.post.findUnique({
+  async countLikes(postId: string, user: UserFromJwt): Promise<number> {
+    const count = await this.prisma.postLikeds.count({
       where: {
-        id: postId,
+        postId,
       },
     });
 
-    const updatePostDislikes = await this.prisma.post.update({
-      where: {
-        id: post.id,
-      },
-      data: {
-        dislikes: {
-          increment: checked ? 1 : 0,
-          decrement: !checked ? 1 : 0,
-        },
-      },
-    });
-
-    return updatePostDislikes.dislikes;
+    return count;
   }
 }

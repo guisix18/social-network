@@ -5,6 +5,4 @@ export const select = {
   imageUrl: true,
   imageFormat: true,
   comments: true,
-  likes: true,
-  dislikes: true,
 };
