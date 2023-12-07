@@ -22,6 +22,7 @@ export class PostsModule implements NestModule {
       .forRoutes(
         { path: 'posts/like', method: RequestMethod.PATCH },
         { path: 'posts/dislikes', method: RequestMethod.PATCH },
+        { path: 'post/count/likes', method: RequestMethod.GET },
       );
   }
 }
