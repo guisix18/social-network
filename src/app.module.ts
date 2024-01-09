@@ -6,9 +6,17 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { AuthModule } from './auth/auth.module';
 import { PostsModule } from './posts/posts.module';
 import { CommentsModule } from './comments/comments.module';
+import { ReporterModule } from './reporter/reporter.module';
 
 @Module({
-  imports: [PrismaModule, UserModule, PostsModule, CommentsModule, AuthModule],
+  imports: [
+    PrismaModule,
+    UserModule,
+    PostsModule,
+    CommentsModule,
+    AuthModule,
+    ReporterModule,
+  ],
   providers: [
     {
       provide: APP_GUARD,

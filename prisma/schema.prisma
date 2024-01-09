@@ -23,6 +23,8 @@ model User {
   posts Post[]
   comments Comments[]
   postsLikeds PostLikeds[]
+  blockedUser BlockedUsers[] @relation("blockedUsers")
+  reporterUser BlockedUsers[] @relation("reporterUsers") 
 }
 
 model Post {
@@ -56,4 +58,14 @@ model PostLikeds {
   postId String 
   eventAt DateTime
   liked Boolean
+}
+
+model BlockedUsers {
+  id String @id
+  blockedUser User @relation("blockedUsers", fields: [blockedUserId], references: [id])
+  blockedUserId String
+  reason String
+  reporterUser User? @relation("reporterUsers", fields: [reporterId], references: [id])
+  reporterId String
+  createdAt DateTime @default(now())
 }
