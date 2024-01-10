@@ -7,14 +7,8 @@ export class ReporterDto {
 }
 
 export class ReportResDto {
-  @IsString()
   id: string;
-
-  @IsString()
   blockedUserId: string;
-
-  @IsString()
   reporterId: string;
-
   createdAt: Date;
 }
