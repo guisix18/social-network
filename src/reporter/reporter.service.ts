@@ -5,6 +5,10 @@ import { ReportResDto, ReporterDto } from './dto/reporter.dto';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { UserServices } from 'src/user/user.service';
+import {
+  ALREADY_REPORTED,
+  USER_BLOCKED,
+} from 'src/utils/reports/exceptions.reports';
 
 @Injectable()
 export class ReporterService {
@@ -25,13 +29,11 @@ export class ReporterService {
       },
     });
 
-    if (findReported)
-      throw new HttpException('You already report this user', 400);
+    if (findReported) throw new HttpException(ALREADY_REPORTED, 400);
 
     const verify = await this.verifySituation(blockedId);
 
-    if (verify)
-      throw new HttpException('User blocked due to excessive reporting', 400);
+    if (verify) throw new HttpException(USER_BLOCKED, 400);
 
     const data: Prisma.BlockedUsersCreateInput = {
       id: randomUUID(),
