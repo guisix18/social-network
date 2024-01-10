@@ -1,5 +1,7 @@
 import { Comments, Post } from '@prisma/client';
+import { Transform } from 'class-transformer';
 import {
+  IsBoolean,
   IsEmail,
   IsNotEmpty,
   IsOptional,
@@ -26,6 +28,11 @@ export class UserDto {
   @IsOptional()
   @IsString()
   resetToken?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  @Transform((a) => (a.value === 'true' ? true : false))
+  active?: boolean;
 
   posts?: Post[] | null;
 
