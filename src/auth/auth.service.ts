@@ -6,7 +6,7 @@ import { IUser } from './interface/user.interface';
 import { JwtService } from '@nestjs/jwt';
 import { UserToken } from './models/UserToken';
 import { UnauthorizedError } from './errors/unhauthorized.error';
-import { LOGIN_ERROR } from './utils/auth.messages';
+import { BLOCKED_USER, LOGIN_ERROR } from './utils/auth.messages';
 
 @Injectable()
 export class AuthService {
@@ -32,8 +32,12 @@ export class AuthService {
   async validateUser(email: string, password: string) {
     const user = await this.userServices.findByEmail(email);
 
+    console.log(user);
+
     if (user) {
       const isPasswordValid = await bcrypt.compare(password, user.password);
+
+      if (!user.active) throw new UnauthorizedError(BLOCKED_USER);
 
       if (isPasswordValid) {
         return {
