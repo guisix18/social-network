@@ -4,33 +4,34 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { ReportResDto, ReporterDto } from './dto/reporter.dto';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
+import { UserServices } from 'src/user/user.service';
 
 @Injectable()
 export class ReporterService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly userServices: UserServices,
+  ) {}
 
   async createReport(
     dto: ReporterDto,
     user: UserFromJwt,
     blockedId: string,
   ): Promise<ReportResDto> {
-    const findBlocks = await this.prisma.blockedUsers.findFirst({
+    const findReported = await this.prisma.blockedUsers.findFirst({
       where: {
         reporterId: user.id,
         blockedUserId: blockedId,
       },
     });
 
-    console.log('Achou?', findBlocks);
-
-    if (findBlocks)
+    if (findReported)
       throw new HttpException('You already report this user', 400);
 
-    const count = await this.countReports(blockedId);
+    const verify = await this.verifySituation(blockedId);
 
-    console.log(count);
-
-    if (count >= 3) throw new HttpException('User already blocked', 400);
+    if (verify)
+      throw new HttpException('User blocked due to excessive reporting', 400);
 
     const data: Prisma.BlockedUsersCreateInput = {
       id: randomUUID(),
@@ -41,18 +42,18 @@ export class ReporterService {
 
     const proceedWithBlock = await this.prisma.blockedUsers.create({ data });
 
-    console.log('PROCEED', proceedWithBlock);
-
     return proceedWithBlock;
   }
 
-  private async countReports(blockedId: string): Promise<number> {
-    const count = await this.prisma.blockedUsers.count({
+  private async verifySituation(blockedId: string): Promise<string> {
+    const ocurrences = await this.prisma.blockedUsers.count({
       where: {
         blockedUserId: blockedId,
       },
     });
 
-    return count;
+    if (ocurrences < 3) return;
+
+    return await this.userServices.deactivateUser(blockedId);
   }
 }
