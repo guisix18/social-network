@@ -1,7 +1,7 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { UserFromJwt } from 'src/auth/models/UserFromJwt';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { ReportResDto, ReporterDto } from './dto/reporter.dto';
+import { ReporterDto } from './dto/reporter.dto';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { UserServices } from 'src/user/user.service';
@@ -9,6 +9,7 @@ import {
   ALREADY_REPORTED,
   USER_BLOCKED,
 } from 'src/utils/reports/exceptions.reports';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class ReporterService {
@@ -21,7 +22,7 @@ export class ReporterService {
     dto: ReporterDto,
     user: UserFromJwt,
     blockedId: string,
-  ): Promise<ReportResDto> {
+  ): Promise<ReporterDto> {
     const findReported = await this.prisma.blockedUsers.findFirst({
       where: {
         reporterId: user.id,
@@ -47,7 +48,13 @@ export class ReporterService {
     return proceedWithBlock;
   }
 
+  async getReports(): Promise<ReporterDto[]> {
+    return await this.prisma.blockedUsers.findMany();
+  }
+
   private async verifySituation(blockedId: string): Promise<string> {
+    const block = true;
+
     const ocurrences = await this.prisma.blockedUsers.count({
       where: {
         blockedUserId: blockedId,
@@ -56,6 +63,50 @@ export class ReporterService {
 
     if (ocurrences < 3) return;
 
-    return await this.userServices.deactivateUser(blockedId);
+    return await this.userServices.deactivateUser(blockedId, block);
+  }
+
+  @Cron(CronExpression.EVERY_10_MINUTES)
+  private async verifyBlockedAtTime(): Promise<void> {
+    const oneHour = 60 * 60 * 1000;
+    const now = Date.now();
+
+    const users = await this.userServices.listUsers();
+
+    const firstBlocked = users.rows.find((user) => !user.active);
+
+    if (!firstBlocked) return;
+
+    const userBlocked = await this.prisma.user.findFirst({
+      where: {
+        blockedAt: firstBlocked.blockedAt,
+      },
+    });
+
+    const timeDifference = now - new Date(userBlocked.blockedAt).getTime();
+
+    await this.prisma.$transaction(
+      async (prismaTsx: Prisma.TransactionClient) => {
+        if (timeDifference < oneHour) return;
+
+        await prismaTsx.user.update({
+          where: {
+            id: userBlocked.id,
+          },
+          data: {
+            blockedAt: null,
+            active: true,
+            updatedAt: new Date(),
+          },
+        });
+        await prismaTsx.blockedUsers.deleteMany({
+          where: {
+            blockedUserId: userBlocked.id,
+          },
+        });
+
+        return;
+      },
+    );
   }
 }
