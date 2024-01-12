@@ -4,11 +4,12 @@ export class ReporterDto {
   @IsString()
   @MaxLength(255)
   reason: string;
-}
 
-export class ReportResDto {
-  id: string;
+  @IsString()
   blockedUserId: string;
+
+  @IsString()
   reporterId: string;
+
   createdAt: Date;
 }
