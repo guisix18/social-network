@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { PostsModule } from './posts/posts.module';
 import { CommentsModule } from './comments/comments.module';
 import { ReporterModule } from './reporter/reporter.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { ReporterModule } from './reporter/reporter.module';
     CommentsModule,
     AuthModule,
     ReporterModule,
+    ScheduleModule.forRoot(),
   ],
   providers: [
     {
