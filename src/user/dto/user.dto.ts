@@ -37,6 +37,8 @@ export class UserDto {
   posts?: Post[] | null;
 
   comments?: Comments[] | null;
+
+  blockedAt?: Date;
 }
 
 export class UpdateUserDto {
