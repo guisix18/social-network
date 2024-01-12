@@ -8,4 +8,5 @@ export const select = {
   updatedAt: true,
   active: true,
   posts: true,
+  blockedAt: true,
 };
