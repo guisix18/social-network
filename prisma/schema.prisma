@@ -24,7 +24,8 @@ model User {
   comments Comments[]
   postsLikeds PostLikeds[]
   blockedUser BlockedUsers[] @relation("blockedUsers")
-  reporterUser BlockedUsers[] @relation("reporterUsers") 
+  reporterUser BlockedUsers[] @relation("reporterUsers")
+  blockedAt DateTime? 
 }
 
 model Post {
