@@ -62,7 +62,10 @@ export class UserServices {
     return userUpdated;
   }
 
-  async deactivateUser(userId: string): Promise<string> {
+  async deactivateUser(
+    userId: string,
+    block: boolean = false,
+  ): Promise<string> {
     const userDeactivated = await this.prisma.user.update({
       where: {
         id: userId,
@@ -70,6 +73,7 @@ export class UserServices {
       data: {
         updatedAt: new Date(),
         active: false,
+        blockedAt: block && new Date(),
       },
     });
 
@@ -83,6 +87,7 @@ export class UserServices {
       },
       data: {
         active: true,
+        updatedAt: new Date(),
       },
     });
 
