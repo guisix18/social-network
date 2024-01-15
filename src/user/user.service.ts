@@ -86,6 +86,7 @@ export class UserServices {
         id: userId,
       },
       data: {
+        blockedAt: null,
         active: true,
         updatedAt: new Date(),
       },
