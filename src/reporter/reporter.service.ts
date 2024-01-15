@@ -89,16 +89,8 @@ export class ReporterService {
       async (prismaTsx: Prisma.TransactionClient) => {
         if (timeDifference < oneHour) return;
 
-        await prismaTsx.user.update({
-          where: {
-            id: userBlocked.id,
-          },
-          data: {
-            blockedAt: null,
-            active: true,
-            updatedAt: new Date(),
-          },
-        });
+        await this.userServices.activateUser(userBlocked.id);
+
         await prismaTsx.blockedUsers.deleteMany({
           where: {
             blockedUserId: userBlocked.id,
