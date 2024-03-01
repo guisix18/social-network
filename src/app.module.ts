@@ -8,6 +8,8 @@ import { PostsModule } from './posts/posts.module';
 import { CommentsModule } from './comments/comments.module';
 import { ReporterModule } from './reporter/reporter.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { CacheModule, CacheModuleOptions } from '@nestjs/cache-manager';
+import { redisStore } from 'cache-manager-redis-store';
 
 @Module({
   imports: [
@@ -18,6 +20,12 @@ import { ScheduleModule } from '@nestjs/schedule';
     AuthModule,
     ReporterModule,
     ScheduleModule.forRoot(),
+    CacheModule.registerAsync({
+      useFactory: async (): Promise<CacheModuleOptions | any> => ({
+        store: await redisStore({ ttl: 3600 * 1000 }),
+      }),
+      isGlobal: true,
+    }),
   ],
   providers: [
     {
