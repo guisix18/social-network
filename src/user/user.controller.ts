@@ -4,12 +4,15 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   Patch,
   Post,
+  Query,
+  Req,
   Res,
 } from '@nestjs/common';
-import { Response, response } from 'express';
+import { Response } from 'express';
 import { UserServices } from './user.service';
 import { UpdateUserDto, UserDto } from './dto/user.dto';
 import { IsPublic } from 'src/auth/decorators/is-public.decorator';
@@ -19,10 +22,16 @@ import {
   USER_DEACTIVATED,
 } from 'src/utils/user/messages.user';
 import { UserRows } from './dto/userRows.dto';
+import { CacheInterceptor } from '@nestjs/cache-manager';
+import { CacheManagementService } from 'src/cache/cache.service';
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userServices: UserServices) {}
+  constructor(
+    private readonly userServices: UserServices,
+    @Inject(CacheManagementService)
+    private readonly cacheManagement: CacheManagementService,
+  ) {}
 
   @IsPublic()
   @Post()
@@ -42,8 +51,13 @@ export class UserController {
   @IsPublic()
   @Get()
   @HttpCode(HttpStatus.OK)
-  async listUsers(@Res() response: Response): Promise<Response<UserRows>> {
+  async listUsers(
+    @Res() response: Response,
+    @Query('test') test: string,
+  ): Promise<Response<UserRows>> {
     const users = await this.userServices.listUsers();
+
+    console.log(await this.cacheManagement.getSession(test));
 
     return response.json(users);
   }

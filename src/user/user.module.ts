@@ -9,11 +9,12 @@ import { UserServices } from './user.service';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { VerifyEmailAvailabilityMiddleware } from './middleware/verifyEmailAvailability.middleware';
 import { VerifyUserIdMiddleware } from './middleware/verifyUserId.middleware';
+import { CacheManagementService } from 'src/cache/cache.service';
 
 @Module({
   imports: [PrismaModule],
   controllers: [UserController],
-  providers: [UserServices],
+  providers: [UserServices, CacheManagementService],
   exports: [UserServices],
 })
 export class UserModule implements NestModule {
