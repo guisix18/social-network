@@ -10,12 +10,19 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { VerifyEmailAvailabilityMiddleware } from './middleware/verifyEmailAvailability.middleware';
 import { VerifyUserIdMiddleware } from './middleware/verifyUserId.middleware';
 import { CacheManagementService } from 'src/cache/cache.service';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [
+    PrismaModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET_NEW_PASS,
+      signOptions: { expiresIn: 400 },
+    }),
+  ],
   controllers: [UserController],
   providers: [UserServices, CacheManagementService],
-  exports: [UserServices],
+  exports: [UserServices, JwtModule],
 })
 export class UserModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

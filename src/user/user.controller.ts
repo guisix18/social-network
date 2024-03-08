@@ -4,15 +4,15 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Inject,
   Param,
   Patch,
   Post,
   Query,
-  Req,
   Res,
+  Req,
+  UseInterceptors,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { UserServices } from './user.service';
 import { UpdateUserDto, UserDto } from './dto/user.dto';
 import { IsPublic } from 'src/auth/decorators/is-public.decorator';
@@ -22,16 +22,14 @@ import {
   USER_DEACTIVATED,
 } from 'src/utils/user/messages.user';
 import { UserRows } from './dto/userRows.dto';
-import { CacheInterceptor } from '@nestjs/cache-manager';
-import { CacheManagementService } from 'src/cache/cache.service';
+import { ForgetPasswordDto } from './dto/send-reset-password.dto';
+import { NewPasswordDto } from './dto/new-password.dto';
+import { FilterNewPasswordDto } from './dto/filter-new-password.dto';
+import { CacheInterceptor } from 'src/cache/cache.interceptor';
 
 @Controller('user')
 export class UserController {
-  constructor(
-    private readonly userServices: UserServices,
-    @Inject(CacheManagementService)
-    private readonly cacheManagement: CacheManagementService,
-  ) {}
+  constructor(private readonly userServices: UserServices) {}
 
   @IsPublic()
   @Post()
@@ -48,16 +46,11 @@ export class UserController {
     });
   }
 
-  @IsPublic()
+  @UseInterceptors(CacheInterceptor)
   @Get()
   @HttpCode(HttpStatus.OK)
-  async listUsers(
-    @Res() response: Response,
-    @Query('test') test: string,
-  ): Promise<Response<UserRows>> {
+  async listUsers(@Res() response: Response): Promise<Response<UserRows>> {
     const users = await this.userServices.listUsers();
-
-    console.log(await this.cacheManagement.getSession(test));
 
     return response.json(users);
   }
@@ -99,6 +92,36 @@ export class UserController {
     return response.json({
       message: USER_ACTIVATED,
       userId: activatedUserId,
+    });
+  }
+
+  @IsPublic()
+  @Post('/send-reset-password')
+  @HttpCode(HttpStatus.OK)
+  async forgetPassword(
+    @Body() data: ForgetPasswordDto,
+    @Req() request: Request,
+    @Res() response: Response,
+  ): Promise<Response<void>> {
+    await this.userServices.forgetPassword(request, data);
+
+    return response.json({
+      message: 'Email sent, please verify your email',
+    });
+  }
+
+  @IsPublic()
+  @Patch('/new-password')
+  async newPassword(
+    @Body() data: NewPasswordDto,
+    @Res() response: Response,
+    @Query() filters: FilterNewPasswordDto,
+  ) {
+    console.log(filters);
+    await this.userServices.newPassword(data, filters);
+
+    return response.json({
+      message: 'Password changed!',
     });
   }
 }
