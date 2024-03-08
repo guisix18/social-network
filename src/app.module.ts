@@ -10,6 +10,7 @@ import { ReporterModule } from './reporter/reporter.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CacheModule, CacheModuleOptions } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-store';
+import { MailerModule } from '@nestjs-modules/mailer';
 
 @Module({
   imports: [
@@ -25,6 +26,15 @@ import { redisStore } from 'cache-manager-redis-store';
         store: await redisStore({ ttl: 3600 * 1000 }),
       }),
       isGlobal: true,
+    }),
+    MailerModule.forRoot({
+      transport: {
+        host: 'smtp.gmail.com',
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      },
     }),
   ],
   providers: [
