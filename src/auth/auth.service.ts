@@ -5,7 +5,7 @@ import { UserPayload } from './models/UserPayload';
 import { IUser } from './interface/user.interface';
 import { JwtService } from '@nestjs/jwt';
 import { UserToken } from './models/UserToken';
-import { UnauthorizedError } from './errors/unhauthorized.error';
+import { UnauthorizedError } from './errors/unauthorized.error';
 import { BLOCKED_USER, LOGIN_ERROR } from './utils/auth.messages';
 
 @Injectable()
@@ -25,7 +25,10 @@ export class AuthService {
     };
 
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: this.jwtService.sign(payload, {
+        secret: process.env.JWT_SECRET,
+        expiresIn: '1d',
+      }),
     };
   }
 

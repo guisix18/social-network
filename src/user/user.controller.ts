@@ -25,7 +25,7 @@ import { UserRows } from './dto/userRows.dto';
 import { ForgetPasswordDto } from './dto/send-reset-password.dto';
 import { NewPasswordDto } from './dto/new-password.dto';
 import { FilterNewPasswordDto } from './dto/filter-new-password.dto';
-import { CacheInterceptor } from 'src/cache/cache.interceptor';
+import { CacheInterceptor } from '@nestjs/cache-manager';
 
 @Controller('user')
 export class UserController {
@@ -46,7 +46,6 @@ export class UserController {
     });
   }
 
-  @UseInterceptors(CacheInterceptor)
   @Get()
   @HttpCode(HttpStatus.OK)
   async listUsers(@Res() response: Response): Promise<Response<UserRows>> {
@@ -117,7 +116,6 @@ export class UserController {
     @Res() response: Response,
     @Query() filters: FilterNewPasswordDto,
   ) {
-    console.log(filters);
     await this.userServices.newPassword(data, filters);
 
     return response.json({

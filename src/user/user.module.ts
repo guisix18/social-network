@@ -9,7 +9,6 @@ import { UserServices } from './user.service';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { VerifyEmailAvailabilityMiddleware } from './middleware/verifyEmailAvailability.middleware';
 import { VerifyUserIdMiddleware } from './middleware/verifyUserId.middleware';
-import { CacheManagementService } from 'src/cache/cache.service';
 import { JwtModule } from '@nestjs/jwt';
 
 @Module({
@@ -21,7 +20,7 @@ import { JwtModule } from '@nestjs/jwt';
     }),
   ],
   controllers: [UserController],
-  providers: [UserServices, CacheManagementService],
+  providers: [UserServices],
   exports: [UserServices, JwtModule],
 })
 export class UserModule implements NestModule {
