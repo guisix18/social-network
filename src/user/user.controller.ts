@@ -11,6 +11,7 @@ import {
   Res,
   Req,
   UseInterceptors,
+  Inject,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { UserServices } from './user.service';
@@ -25,11 +26,17 @@ import { UserRows } from './dto/userRows.dto';
 import { ForgetPasswordDto } from './dto/send-reset-password.dto';
 import { NewPasswordDto } from './dto/new-password.dto';
 import { FilterNewPasswordDto } from './dto/filter-new-password.dto';
-import { CacheInterceptor } from '@nestjs/cache-manager';
+import { CacheInterceptor } from '../cache/cache.interceptor';
+import { CacheManagement } from '../cache/cache.service';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { UserFromJwt } from '../auth/models/UserFromJwt';
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userServices: UserServices) {}
+  constructor(
+    private readonly userServices: UserServices,
+    @Inject(CacheManagement) private readonly cache: CacheManagement,
+  ) {}
 
   @IsPublic()
   @Post()
@@ -46,10 +53,20 @@ export class UserController {
     });
   }
 
+  @UseInterceptors(CacheInterceptor)
   @Get()
   @HttpCode(HttpStatus.OK)
-  async listUsers(@Res() response: Response): Promise<Response<UserRows>> {
+  async listUsers(
+    @Req() request: Request,
+    @Res() response: Response,
+    @CurrentUser() user: UserFromJwt,
+  ): Promise<Response<UserRows>> {
     const users = await this.userServices.listUsers();
+
+    await this.cache.createCache(
+      `${request.url}-${request.method}-${user.id}`,
+      users,
+    );
 
     return response.json(users);
   }
