@@ -11,6 +11,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { CacheModule, CacheModuleOptions } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-store';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { MailerServicesModule } from './mailer/mailer.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
         },
       },
     }),
+    MailerServicesModule,
   ],
   providers: [
     {
