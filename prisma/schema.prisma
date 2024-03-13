@@ -11,20 +11,21 @@ datasource db {
 }
 
 model User {
-  id           String         @id
-  name         String
-  email        String         @unique
-  password     String
-  resetToken   String?
-  createdAt    DateTime
-  updatedAt    DateTime?
-  active       Boolean        @default(true)
-  posts        Post[]
-  comments     Comments[]
-  postsLikeds  PostLikeds[]
-  blockedUser  BlockedUsers[] @relation("blockedUsers")
-  reporterUser BlockedUsers[] @relation("reporterUsers")
-  blockedAt    DateTime?
+  id            String         @id
+  name          String
+  email         String         @unique
+  password      String
+  resetToken    String?
+  createdAt     DateTime
+  updatedAt     DateTime?
+  active        Boolean        @default(true)
+  posts         Post[]
+  comments      Comments[]
+  postsLikeds   PostLikeds[]
+  blockedUser   BlockedUsers[] @relation("blockedUsers")
+  reporterUser  BlockedUsers[] @relation("reporterUsers")
+  blockedAt     DateTime?
+  VerifyAccount VerifyAccount?
 }
 
 model Post {
@@ -68,4 +69,12 @@ model BlockedUsers {
   reporterUser  User?    @relation("reporterUsers", fields: [reporterId], references: [id])
   reporterId    String
   createdAt     DateTime @default(now())
+}
+
+model VerifyAccount {
+  id             String    @id @default(uuid())
+  userVerified   User      @relation(fields: [userVerifiedId], references: [id])
+  userVerifiedId String    @unique
+  verifiedAt     DateTime?
+  verified       Boolean?
 }
