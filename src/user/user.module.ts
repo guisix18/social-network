@@ -11,6 +11,8 @@ import { VerifyEmailAvailabilityMiddleware } from './middleware/verifyEmailAvail
 import { VerifyUserIdMiddleware } from './middleware/verifyUserId.middleware';
 import { JwtModule } from '@nestjs/jwt';
 import { CacheManagement } from '../cache/cache.service';
+import { MailerServices } from '../mailer/mailer.service';
+import { MailerServicesModule } from '../mailer/mailer.module';
 
 @Module({
   imports: [
@@ -19,10 +21,11 @@ import { CacheManagement } from '../cache/cache.service';
       secret: process.env.JWT_SECRET_NEW_PASS,
       signOptions: { expiresIn: 400 },
     }),
+    MailerServicesModule,
   ],
   controllers: [UserController],
-  providers: [UserServices, CacheManagement],
-  exports: [UserServices, JwtModule],
+  providers: [UserServices, CacheManagement, MailerServices],
+  exports: [UserServices, JwtModule, MailerServices],
 })
 export class UserModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
