@@ -25,7 +25,7 @@ model User {
   blockedUser   BlockedUsers[] @relation("blockedUsers")
   reporterUser  BlockedUsers[] @relation("reporterUsers")
   blockedAt     DateTime?
-  VerifyAccount VerifyAccount?
+  verifyAccount VerifyAccount?
 }
 
 model Post {
