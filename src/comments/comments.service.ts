@@ -149,6 +149,10 @@ export class CommentsServices {
     return topLevelComments.map((comment) => this.formatComment(comment));
   }
 
+  //Acho que vou ter que passar isso para ser uma query, já que prisma não tem o próprio método recursivo
+  //não sei até onde é viável uma função recursiva feita assim a mão.
+  //Se tratando de performance, testando local obviously não percebo nenhum problema, como seria com múltiplos usuários fazendo essa request?
+  //Bom, sei que empresas grandes como as nomeadas Face, Twitter e etc tem um serviço fora desse escopo mas seria legal eu tentar seguir o caminho parecido.
   private formatComment(comment: IComments) {
     const formattedComment: IComments = {
       id: comment.id,
@@ -159,6 +163,9 @@ export class CommentsServices {
       children: [],
     };
 
+    //Basicamente cada vez que um comentário tiver um filho(seria uma resposta), eu monto um comentário priorizando o acima
+    //E fazendo com que cada um tenha seu filho, POST A tem COMMENT B que por sua vez COMMENT B tem FILHO C, filho fica
+    //No children do COMMMENT B não atrapalhando o que eu queria que fosse retornado(comentários top level)
     if (comment.children) {
       formattedComment.children = comment.children.map((child: IComments) =>
         this.formatComment(child),
