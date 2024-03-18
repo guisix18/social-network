@@ -43,9 +43,10 @@ export class UserController {
   @HttpCode(HttpStatus.CREATED)
   async createUser(
     @Body() data: UserDto,
+    @Req() request: Request,
     @Res() response: Response,
   ): Promise<Response<UserDto>> {
-    const user = await this.userServices.createUser(data);
+    const user = await this.userServices.createUser(data, request);
 
     return response.json({
       message: CREATED_USER,
@@ -137,6 +138,19 @@ export class UserController {
 
     return response.json({
       message: 'Password changed!',
+    });
+  }
+
+  @IsPublic()
+  @Get('/verify-user')
+  async verifyUserAccount(
+    @Res() response: Response,
+    @Query('verificationId') verificationId: string,
+  ) {
+    await this.userServices.verifyUserAccount(verificationId);
+
+    return response.json({
+      message: 'Your account has been validated!',
     });
   }
 }
