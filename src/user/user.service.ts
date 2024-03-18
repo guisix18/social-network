@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateUserDto, UserDto } from './dto/user.dto';
-import { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { select } from 'src/utils/user/select.user';
@@ -75,7 +75,7 @@ export class UserServices {
   }
 
   async findByEmail(email: string): Promise<UserDto> {
-    this.logger.log('Find by email');
+    this.logger.log('Find by email when trying to login');
 
     return await this.prisma.user.findUnique({
       where: {
