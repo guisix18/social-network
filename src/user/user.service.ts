@@ -3,6 +3,7 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateUserDto, UserDto } from './dto/user.dto';
@@ -23,6 +24,7 @@ import { NO_USER_DATA_TO_VALIDATE } from '../utils/user/messages.user';
 
 @Injectable()
 export class UserServices {
+  private readonly logger = new Logger(UserServices.name);
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
@@ -43,6 +45,8 @@ export class UserServices {
       select,
     });
 
+    this.logger.log('User created');
+
     const verification = await this.prisma.verifyAccount.create({
       data: {
         userVerified: {
@@ -53,6 +57,8 @@ export class UserServices {
 
     await this.mailerServices.sendVerifyAccount(user, request, verification.id);
 
+    this.logger.log('Email to verify account has been sent');
+
     return user;
   }
 
@@ -61,12 +67,16 @@ export class UserServices {
       select,
     });
 
+    this.logger.log('List all users');
+
     return {
       rows: users,
     };
   }
 
   async findByEmail(email: string): Promise<UserDto> {
+    this.logger.log('Find by email');
+
     return await this.prisma.user.findUnique({
       where: {
         email,
@@ -90,6 +100,8 @@ export class UserServices {
       select,
     });
 
+    this.logger.log('User updated');
+
     return userUpdated;
   }
 
@@ -108,6 +120,8 @@ export class UserServices {
       },
     });
 
+    this.logger.log('User deactivated');
+
     return userDeactivated.id;
   }
 
@@ -122,6 +136,8 @@ export class UserServices {
         updatedAt: new Date(),
       },
     });
+
+    this.logger.log('User activated');
 
     return userActivated.id;
   }
@@ -148,6 +164,8 @@ export class UserServices {
 
     const token = await this.jwt.signAsync(payload);
 
+    this.logger.log('Token signed');
+
     const userWithToken = await this.prisma.user.update({
       where: {
         id: user.id,
@@ -157,6 +175,7 @@ export class UserServices {
       },
     });
 
+    this.logger.log('Sending email');
     return await this.mailerServices.sendForgetPassword(userWithToken, request);
   }
 
@@ -173,6 +192,8 @@ export class UserServices {
       throw new BadRequestException(error);
     }
 
+    this.logger.log('Starting transaction to update user password');
+
     return await this.prisma.$transaction(
       async (prismaTx: Prisma.TransactionClient) => {
         const user = await prismaTx.user.findUnique({
@@ -186,6 +207,7 @@ export class UserServices {
           throw new HttpException(USER_NOT_FOUND, HttpStatus.NOT_FOUND);
         }
 
+        this.logger.log('Uptade user password');
         await prismaTx.user.update({
           where: {
             id: user.id,
@@ -225,6 +247,8 @@ export class UserServices {
         if (!userToBeVerified) {
           throw new HttpException(USER_NOT_FOUND, HttpStatus.NOT_FOUND);
         }
+
+        this.logger.log('Verifying user account');
 
         await prismaTsx.verifyAccount.update({
           where: {
