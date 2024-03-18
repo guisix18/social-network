@@ -1,5 +1,7 @@
-import { Comments, Post } from '@prisma/client';
+import { Comments, Post, VerifyAccount } from '@prisma/client';
+import { Transform } from 'class-transformer';
 import {
+  IsBoolean,
   IsEmail,
   IsNotEmpty,
   IsOptional,
@@ -27,7 +29,35 @@ export class UserDto {
   @IsString()
   resetToken?: string;
 
+  @IsOptional()
+  @IsBoolean()
+  @Transform((a) => (a.value === 'true' ? true : false))
+  active?: boolean;
+
   posts?: Post[] | null;
 
   comments?: Comments[] | null;
+
+  blockedAt?: Date;
+
+  verifyAccount?: VerifyAccount | null;
+}
+
+export class UpdateUserDto {
+  @IsOptional()
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(255)
+  @MinLength(1)
+  name: string;
+
+  @IsOptional()
+  @IsNotEmpty()
+  @IsEmail()
+  email: string;
+
+  @IsOptional()
+  @IsNotEmpty()
+  @IsString()
+  password: string;
 }

@@ -1,4 +1,9 @@
-import { HttpException, Injectable, NestMiddleware } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NestMiddleware,
+} from '@nestjs/common';
 import { NextFunction, Request } from 'express';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { EMAIL_ALREADY_EXISTS } from 'src/utils/user/exceptions.user';
@@ -16,7 +21,9 @@ export class VerifyEmailAvailabilityMiddleware implements NestMiddleware {
       },
     });
 
-    if (user) throw new HttpException(EMAIL_ALREADY_EXISTS, 409);
+    if (user) {
+      throw new HttpException(EMAIL_ALREADY_EXISTS, HttpStatus.CONFLICT);
+    }
 
     next();
   }

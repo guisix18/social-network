@@ -21,6 +21,8 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(LocalAuthGuard)
   async login(@Req() request: AuthRequest): Promise<UserToken> {
-    return this.authService.login(request.user);
+    const data = this.authService.login(request.user);
+
+    return data;
   }
 }

@@ -1,4 +1,4 @@
-import { IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class FiltersCommentsDto {
   @IsString()
@@ -6,4 +6,8 @@ export class FiltersCommentsDto {
 
   @IsString()
   postId: string;
+
+  @IsOptional()
+  @IsString()
+  parentId?: string;
 }

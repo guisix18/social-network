@@ -4,12 +4,13 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   Query,
   Res,
 } from '@nestjs/common';
 import { CommentsServices } from './comments.service';
-import { Response } from 'express';
+import { Response, response } from 'express';
 import { CommentsDto } from './dto/comments.dto';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { UserFromJwt } from 'src/auth/models/UserFromJwt';
@@ -61,5 +62,46 @@ export class CommentsController {
     );
 
     return response.json(reply);
+  }
+
+  @Get('/byPost')
+  @HttpCode(HttpStatus.OK)
+  async getCommentsByPost(
+    @Query('postId') postId: string,
+    @Res() response: Response,
+  ): Promise<Response<CommentsDto>> {
+    const commentsByPost = await this.commentsServices.getCommentsByPost(
+      postId,
+    );
+
+    return response.json(commentsByPost);
+  }
+
+  @Get('/count/byPost/:postId')
+  @HttpCode(HttpStatus.OK)
+  async countCommentsByPost(
+    @Param('postId') postId: string,
+    @Res() response: Response,
+  ): Promise<Response<number>> {
+    const countComments = await this.commentsServices.countCommentsByPost(
+      postId,
+    );
+
+    return response.json({
+      count: countComments,
+    });
+  }
+
+  @Get('/count/byComment/:commentId')
+  @HttpCode(HttpStatus.OK)
+  async countCommentsByComment(
+    @Param('commentId') commentId: string,
+    @Res() response: Response,
+  ): Promise<Response<number>> {
+    const count = await this.commentsServices.countCommentsByComment(commentId);
+
+    return response.json({
+      count: count,
+    });
   }
 }

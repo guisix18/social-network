@@ -1,9 +1,9 @@
 export interface UserPayload {
   id: string;
-  sub: string; // Vou arranjar uma solução para esse problema depois. TypeScript ta enchendo o saco.
+  sub: string;
   email: string;
   name: string;
-  isActive: boolean;
+  active: boolean;
   iat?: number;
   exp?: number;
 }
