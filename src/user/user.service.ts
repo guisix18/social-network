@@ -191,6 +191,7 @@ export class UserServices {
             id: user.id,
           },
           data: {
+            updatedAt: new Date(),
             resetToken: null,
             password: bcrypt.hashSync(dto.password, 10),
           },
