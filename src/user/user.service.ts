@@ -1,7 +1,12 @@
-import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateUserDto, UserDto } from './dto/user.dto';
-import { Prisma } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { select } from 'src/utils/user/select.user';
@@ -14,6 +19,7 @@ import { NewPasswordDto } from './dto/new-password.dto';
 import { FilterNewPasswordDto } from './dto/filter-new-password.dto';
 import { USER_NOT_FOUND } from '../utils/user/exceptions.user';
 import { MailerServices } from '../mailer/mailer.service';
+import { NO_USER_DATA_TO_VALIDATE } from '../utils/user/messages.user';
 
 @Injectable()
 export class UserServices {
@@ -23,7 +29,7 @@ export class UserServices {
     private readonly mailerServices: MailerServices,
   ) {}
 
-  async createUser(dto: UserDto): Promise<UserDto> {
+  async createUser(dto: UserDto, request: Request): Promise<UserDto> {
     const data: Prisma.UserCreateInput = {
       id: randomUUID(),
       name: dto.name,
@@ -36,6 +42,16 @@ export class UserServices {
       data,
       select,
     });
+
+    const verification = await this.prisma.verifyAccount.create({
+      data: {
+        userVerified: {
+          connect: { id: user.id },
+        },
+      },
+    });
+
+    await this.mailerServices.sendVerifyAccount(user, request, verification.id);
 
     return user;
   }
@@ -54,6 +70,9 @@ export class UserServices {
     return await this.prisma.user.findUnique({
       where: {
         email,
+      },
+      include: {
+        verifyAccount: true,
       },
     });
   }
@@ -117,6 +136,8 @@ export class UserServices {
       },
     });
 
+    if (!user) throw new HttpException(USER_NOT_FOUND, HttpStatus.NOT_FOUND);
+
     const payload: UserPayload = {
       id: user.id,
       sub: user.id,
@@ -136,7 +157,7 @@ export class UserServices {
       },
     });
 
-    return await this.mailerServices.sendEmail(userWithToken, request);
+    return await this.mailerServices.sendForgetPassword(userWithToken, request);
   }
 
   async newPassword(
@@ -147,7 +168,7 @@ export class UserServices {
 
     try {
       const verify = this.jwt.verify(filters.token);
-      decodedToken = verify as UserPayload; //Fiz o uso do "as" pro verify atribuido ao decoded tenha o tipo que eu quero(podia usar o plainToInstance mas seria necessário ser uma classe)
+      decodedToken = verify as UserPayload; //Fiz o uso do "as" pro verify atribuido ao decoded tenha o tipo que eu quero(podia usar o plainToInstance mas seria necessário ser uma classe, bom, isso resolve também)
     } catch (error) {
       throw new BadRequestException('Token invalid!');
     }
@@ -161,7 +182,9 @@ export class UserServices {
           },
         });
 
-        if (!user) throw new HttpException(USER_NOT_FOUND, 404);
+        if (!user) {
+          throw new HttpException(USER_NOT_FOUND, HttpStatus.NOT_FOUND);
+        }
 
         await prismaTx.user.update({
           where: {
@@ -170,6 +193,46 @@ export class UserServices {
           data: {
             resetToken: null,
             password: bcrypt.hashSync(dto.password, 10),
+          },
+        });
+      },
+    );
+  }
+
+  async verifyUserAccount(verificationId: string) {
+    return await this.prisma.$transaction(
+      async (prismaTsx: Prisma.TransactionClient) => {
+        const verifyData = await prismaTsx.verifyAccount.findUnique({
+          where: {
+            id: verificationId,
+          },
+        });
+
+        if (!verifyData) {
+          throw new HttpException(
+            NO_USER_DATA_TO_VALIDATE,
+            HttpStatus.NOT_FOUND,
+          );
+        }
+
+        const userToBeVerified = await prismaTsx.user.findUnique({
+          where: {
+            id: verifyData.userVerifiedId,
+          },
+        });
+
+        if (!userToBeVerified) {
+          throw new HttpException(USER_NOT_FOUND, HttpStatus.NOT_FOUND);
+        }
+
+        await prismaTsx.verifyAccount.update({
+          where: {
+            id: verifyData.id,
+            userVerifiedId: userToBeVerified.id,
+          },
+          data: {
+            verifiedAt: new Date(),
+            verified: true,
           },
         });
       },
