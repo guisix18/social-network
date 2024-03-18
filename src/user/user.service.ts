@@ -170,7 +170,7 @@ export class UserServices {
       const verify = this.jwt.verify(filters.token);
       decodedToken = verify as UserPayload; //Fiz o uso do "as" pro verify atribuido ao decoded tenha o tipo que eu quero(podia usar o plainToInstance mas seria necessário ser uma classe, bom, isso resolve também)
     } catch (error) {
-      throw new BadRequestException('Token invalid!');
+      throw new BadRequestException(error);
     }
 
     return await this.prisma.$transaction(
