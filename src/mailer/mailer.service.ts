@@ -87,7 +87,7 @@ export class MailerServices {
       },
     });
 
-    const link = this.urlGen(request).replace('user', 'verify-user');
+    const link = this.urlGen(request) + '/verify-user';
 
     const emailBody: Content = {
       body: {
