@@ -1,4 +1,4 @@
-import { Comments, Post } from '@prisma/client';
+import { Comments, Post, VerifyAccount } from '@prisma/client';
 import { Transform } from 'class-transformer';
 import {
   IsBoolean,
@@ -39,6 +39,8 @@ export class UserDto {
   comments?: Comments[] | null;
 
   blockedAt?: Date;
+
+  verifyAccount?: VerifyAccount | null;
 }
 
 export class UpdateUserDto {
