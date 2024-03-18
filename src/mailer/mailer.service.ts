@@ -1,11 +1,17 @@
 import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
+import { User } from '@prisma/client';
 import { Request } from 'express';
 import { Content } from 'mailgen';
 import { UserDto } from 'src/user/dto/user.dto';
 
 const Mailgen = require('mailgen'); //Impressionante, mesmo pesquisando não consegui utilizar esse carinha de outra forma... TODO/Ou se não tiver o que fazer, assim serve
 
+//TODO: Devo dar um jeito de fazer o email automáticamente utilizando o mesmo método sempre que for necessário
+//Até porque da maneira que está agora vou sempre precisar reimplementar o mesmo método.
+//Ver a necessidade ao longo do tempo.
+//Não sei até onde é viável enviar "email pra tudo", tô pensando em notificar o usuário toda vez que alguém responder seu POST(ou seu COMMENT)
+//O bom é que o método de urlGen vai funcionar pra N casos, ao menos a responsabilidade única eu consegui adicionar nesse em questão, devo melhorar esse service ao longo tempo.
 @Injectable()
 export class MailerServices {
   constructor(private readonly mailer: MailerService) {}
@@ -19,11 +25,11 @@ export class MailerServices {
     return fullUrl;
   }
 
-  private createEmailBody(user: UserDto, request: Request) {
+  private createForgetEmail(user: UserDto, request: Request) {
     const mailgen = new Mailgen({
       theme: 'default',
       product: {
-        name: 'Reset Password Social Project',
+        name: 'Reset Password - Social Project',
         link: request.protocol + request.get('Host'),
       },
     });
@@ -55,13 +61,71 @@ export class MailerServices {
     return email;
   }
 
-  async sendEmail(user: UserDto, request: Request): Promise<void> {
-    const htmlToBeSented = this.createEmailBody(user, request);
+  async sendForgetPassword(user: UserDto, request: Request): Promise<void> {
+    const htmlToBeSented = this.createForgetEmail(user, request);
 
     await this.mailer.sendMail({
       to: user.email,
       from: 'guisix16@gmail.com',
-      subject: 'Reset your password',
+      subject: 'Reset your password - Social Project',
+      html: htmlToBeSented,
+    });
+
+    return;
+  }
+
+  private createVerifyAccountEmail(
+    user: UserDto,
+    request: Request,
+    verificationId: string,
+  ) {
+    const mailgen = new Mailgen({
+      theme: 'default',
+      product: {
+        name: 'Verify Account - Social Project',
+        link: request.protocol + request.get('Host'),
+      },
+    });
+
+    const link = this.urlGen(request).replace('user', 'verify-user');
+
+    const emailBody: Content = {
+      body: {
+        name: user.name,
+        intro: 'Verify your account',
+        action: {
+          instructions:
+            'Clique no botão agora para validarmos a sua conta no nosso sistema!',
+          button: {
+            color: '#0099FF',
+            text: 'Verificar conta',
+            link: `${link}?verificationId=${verificationId}`,
+          },
+        },
+        outro: 'Need help? Please, send me a email',
+      },
+    };
+
+    const email = mailgen.generate(emailBody);
+
+    return email;
+  }
+
+  async sendVerifyAccount(
+    user: User,
+    request: Request,
+    verificationId: string,
+  ): Promise<void> {
+    const htmlToBeSented = this.createVerifyAccountEmail(
+      user,
+      request,
+      verificationId,
+    );
+
+    await this.mailer.sendMail({
+      to: user.email,
+      from: 'guisix16@gmail.com',
+      subject: 'Account Verification - Social Project',
       html: htmlToBeSented,
     });
 
