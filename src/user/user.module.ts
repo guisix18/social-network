@@ -13,9 +13,13 @@ import { JwtModule } from '@nestjs/jwt';
 import { CacheManagement } from '../cache/cache.service';
 import { MailerServices } from '../mailer/mailer.service';
 import { MailerServicesModule } from '../mailer/mailer.module';
+import { BullModule } from '@nestjs/bull';
 
 @Module({
   imports: [
+    BullModule.registerQueue({
+      name: 'send-email-queue',
+    }),
     PrismaModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET_NEW_PASS,
