@@ -1,6 +1,7 @@
-import { MailerService } from '@nestjs-modules/mailer';
+import { InjectQueue } from '@nestjs/bull';
 import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
+import { Queue } from 'bull';
 import { Request } from 'express';
 import { Content } from 'mailgen';
 import { UserDto } from 'src/user/dto/user.dto';
@@ -14,7 +15,7 @@ const Mailgen = require('mailgen'); //Impressionante, mesmo pesquisando não con
 //O bom é que o método de urlGen vai funcionar pra N casos, ao menos a responsabilidade única eu consegui adicionar nesse em questão, devo melhorar esse service ao longo tempo.
 @Injectable()
 export class MailerServices {
-  constructor(private readonly mailer: MailerService) {}
+  constructor(@InjectQueue('send-email-queue') private queue: Queue) {}
 
   private urlGen(request: Request): string {
     const protocol = request.protocol;
@@ -64,12 +65,7 @@ export class MailerServices {
   async sendForgetPassword(user: UserDto, request: Request): Promise<void> {
     const htmlToBeSented = this.createForgetEmail(user, request);
 
-    await this.mailer.sendMail({
-      to: user.email,
-      from: 'guisix16@gmail.com',
-      subject: 'Reset your password - Social Project',
-      html: htmlToBeSented,
-    });
+    await this.queue.add('send-forget-email-job', { user, htmlToBeSented });
 
     return;
   }
@@ -122,12 +118,7 @@ export class MailerServices {
       verificationId,
     );
 
-    await this.mailer.sendMail({
-      to: user.email,
-      from: 'guisix16@gmail.com',
-      subject: 'Account Verification - Social Project',
-      html: htmlToBeSented,
-    });
+    await this.queue.add('send-verify-email-job', { user, htmlToBeSented });
 
     return;
   }

@@ -12,9 +12,17 @@ import { CacheModule, CacheModuleOptions } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-store';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { MailerServicesModule } from './mailer/mailer.module';
+import { BullModule } from '@nestjs/bull';
+import { SendMailConsumer } from './jobs/send-mail-consumer';
 
 @Module({
   imports: [
+    BullModule.forRoot({
+      redis: {
+        host: 'localhost',
+        port: 6379,
+      },
+    }),
     PrismaModule,
     UserModule,
     PostsModule,
@@ -38,6 +46,7 @@ import { MailerServicesModule } from './mailer/mailer.module';
       },
     }),
     MailerServicesModule,
+    SendMailConsumer,
   ],
   providers: [
     {

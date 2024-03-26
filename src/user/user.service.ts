@@ -5,15 +5,13 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { UpdateUserDto, UserDto } from './dto/user.dto';
 import { Prisma } from '@prisma/client';
-import { randomUUID } from 'crypto';
 import * as bcrypt from 'bcrypt';
-import { select } from 'src/utils/user/select.user';
 import { UserRows } from './dto/userRows.dto';
 import { Request } from 'express';
-import { UserPayload } from 'src/auth/models/UserPayload';
+import { UserPayload } from '../auth/models/UserPayload';
 import { JwtService } from '@nestjs/jwt';
 import { ForgetPasswordDto } from './dto/send-reset-password.dto';
 import { NewPasswordDto } from './dto/new-password.dto';
@@ -21,6 +19,7 @@ import { FilterNewPasswordDto } from './dto/filter-new-password.dto';
 import { USER_NOT_FOUND } from '../utils/user/exceptions.user';
 import { MailerServices } from '../mailer/mailer.service';
 import { NO_USER_DATA_TO_VALIDATE } from '../utils/user/messages.user';
+import { PrismaUserRepository } from '../repositories/prisma/prisma.user.repository';
 
 @Injectable()
 export class UserServices {
@@ -29,21 +28,11 @@ export class UserServices {
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly mailerServices: MailerServices,
+    private readonly userRepository: PrismaUserRepository,
   ) {}
 
   async createUser(dto: UserDto, request: Request): Promise<UserDto> {
-    const data: Prisma.UserCreateInput = {
-      id: randomUUID(),
-      name: dto.name,
-      email: dto.email,
-      password: bcrypt.hashSync(dto.password, 8),
-      createdAt: new Date(),
-    };
-
-    const user = await this.prisma.user.create({
-      data,
-      select,
-    });
+    const user = await this.userRepository.createUser(dto);
 
     this.logger.log('User created');
 
@@ -63,15 +52,10 @@ export class UserServices {
   }
 
   async listUsers(): Promise<UserRows> {
-    const users = await this.prisma.user.findMany({
-      select,
-    });
-
     this.logger.log('List all users');
+    const users = await this.userRepository.listUsers();
 
-    return {
-      rows: users,
-    };
+    return users;
   }
 
   async findByEmail(email: string): Promise<UserDto> {
@@ -88,21 +72,7 @@ export class UserServices {
   }
 
   async updateUser(data: UpdateUserDto, userId: string): Promise<UserDto> {
-    const userUpdated = await this.prisma.user.update({
-      where: {
-        id: userId,
-      },
-      data: {
-        ...data,
-        password: data.password && bcrypt.hashSync(data.password, 8),
-        updatedAt: new Date(),
-      },
-      select,
-    });
-
-    this.logger.log('User updated');
-
-    return userUpdated;
+    return await this.userRepository.updateUser(data, userId);
   }
 
   async deactivateUser(
