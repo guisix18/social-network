@@ -26,17 +26,12 @@ import { UserRows } from './dto/userRows.dto';
 import { ForgetPasswordDto } from './dto/send-reset-password.dto';
 import { NewPasswordDto } from './dto/new-password.dto';
 import { FilterNewPasswordDto } from './dto/filter-new-password.dto';
-import { CacheInterceptor } from '../cache/cache.interceptor';
-import { CacheManagement } from '../cache/cache.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserFromJwt } from '../auth/models/UserFromJwt';
 
 @Controller('user')
 export class UserController {
-  constructor(
-    private readonly userServices: UserServices,
-    @Inject(CacheManagement) private readonly cache: CacheManagement,
-  ) {}
+  constructor(private readonly userServices: UserServices) {}
 
   @IsPublic()
   @Post()
@@ -54,20 +49,13 @@ export class UserController {
     });
   }
 
-  @UseInterceptors(CacheInterceptor)
   @Get()
   @HttpCode(HttpStatus.OK)
   async listUsers(
-    @Req() request: Request,
     @Res() response: Response,
     @CurrentUser() user: UserFromJwt,
   ): Promise<Response<UserRows>> {
     const users = await this.userServices.listUsers();
-
-    await this.cache.createCache(
-      `${request.url}-${request.method}-${user.id}`,
-      users,
-    );
 
     return response.json(users);
   }
