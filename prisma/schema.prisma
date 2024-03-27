@@ -73,7 +73,7 @@ model BlockedUsers {
 
 model VerifyAccount {
   id             String    @id @default(uuid())
-  userVerified   User      @relation(fields: [userVerifiedId], references: [id])
+  userVerified   User      @relation(fields: [userVerifiedId], references: [id], onDelete: Cascade)
   userVerifiedId String    @unique
   verifiedAt     DateTime?
   verified       Boolean?
