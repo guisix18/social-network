@@ -20,9 +20,6 @@ import { RedisUserRepository } from '../repositories/cache/redis-user-cache.repo
 
 @Module({
   imports: [
-    BullModule.registerQueue({
-      name: 'send-email-queue',
-    }),
     PrismaModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET_NEW_PASS,

@@ -10,6 +10,6 @@ import { BullModule } from '@nestjs/bull';
   ],
   controllers: [],
   providers: [MailerServices],
-  exports: [MailerServices],
+  exports: [MailerServices, BullModule],
 })
 export class MailerServicesModule {}

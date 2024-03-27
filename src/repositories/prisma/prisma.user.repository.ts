@@ -3,7 +3,6 @@ import { UserRepository } from '../user/user.repository';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { select } from '../../utils/user/select.user';
 import { Injectable } from '@nestjs/common';
-import { Request } from 'express';
 import { UpdateUserDto, UserDto } from 'src/user/dto/user.dto';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
