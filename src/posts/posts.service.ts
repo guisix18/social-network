@@ -45,9 +45,9 @@ export class PostsServices {
   async likedPost(
     postId: string,
     user: UserFromJwt,
-    checked: string,
+    checked: boolean,
   ): Promise<PostsLikedsDto> {
-    const validate: boolean = checked === 'true';
+    console.log(checked);
 
     const findLike = await this.prisma.postLikeds.findFirst({
       where: {
@@ -56,7 +56,7 @@ export class PostsServices {
     });
 
     if (findLike) {
-      if (!validate) {
+      if (!checked) {
         return await this.prisma.postLikeds.update({
           where: {
             id: findLike.id,

@@ -50,7 +50,8 @@ export class PostsController {
     @Res() response: Response,
   ): Promise<Response<PostsLikedsDto>> {
     const { postId, checked } = filters;
-    const likes = await this.postsServices.likedPost(postId, user, checked);
+
+    const likes = await this.postsServices.likedPost(postId, user, !!checked);
 
     return response.json(likes);
   }
