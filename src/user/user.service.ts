@@ -61,14 +61,7 @@ export class UserServices {
   async findByEmail(email: string): Promise<UserDto> {
     this.logger.log('Find by email when trying to login');
 
-    return await this.prisma.user.findUnique({
-      where: {
-        email,
-      },
-      include: {
-        verifyAccount: true,
-      },
-    });
+    return this.userRepository.findByEmail(email);
   }
 
   async updateUser(data: UpdateUserDto, userId: string): Promise<UserDto> {
@@ -116,11 +109,7 @@ export class UserServices {
     request: Request,
     dto: ForgetPasswordDto,
   ): Promise<void> {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        email: dto.email,
-      },
-    });
+    const user = await this.userRepository.findByEmail(dto.email);
 
     if (!user) throw new HttpException(USER_NOT_FOUND, HttpStatus.NOT_FOUND);
 
