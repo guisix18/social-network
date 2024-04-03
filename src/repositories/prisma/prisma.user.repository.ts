@@ -4,7 +4,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { select } from '../../utils/user/select.user';
 import { Injectable } from '@nestjs/common';
 import { UpdateUserDto, UserDto } from 'src/user/dto/user.dto';
-import { Prisma } from '@prisma/client';
+import { Prisma, User } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { RedisUserRepository } from '../cache/redis-user-cache.repository';
@@ -31,7 +31,7 @@ export class PrismaUserRepository implements UserRepository {
     };
   }
 
-  async createUser(dto: UserDto) {
+  async createUser(dto: UserDto): Promise<User> {
     const data: Prisma.UserCreateInput = {
       id: randomUUID(),
       name: dto.name,
@@ -40,16 +40,15 @@ export class PrismaUserRepository implements UserRepository {
       createdAt: new Date(),
     };
 
-    const user = await this.prisma.user.create({
+    const user = this.prisma.user.create({
       data,
-      select,
     });
 
     return user;
   }
 
   async updateUser(data: UpdateUserDto, userId: string): Promise<UserDto> {
-    const userUpdated = await this.prisma.user.update({
+    const userUpdated = this.prisma.user.update({
       where: {
         id: userId,
       },
@@ -62,5 +61,25 @@ export class PrismaUserRepository implements UserRepository {
     });
 
     return userUpdated;
+  }
+  async listOneUser(userId: string): Promise<User> {
+    const user = this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    return user;
+  }
+
+  async findByEmail(email: string): Promise<User> {
+    return this.prisma.user.findUnique({
+      where: {
+        email,
+      },
+      include: {
+        verifyAccount: true,
+      },
+    });
   }
 }
