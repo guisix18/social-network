@@ -10,54 +10,56 @@ import {
   Query,
   Res,
   Req,
-  UseInterceptors,
-  Inject,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { UserServices } from './user.service';
 import { UpdateUserDto, UserDto } from './dto/user.dto';
 import { IsPublic } from 'src/auth/decorators/is-public.decorator';
-import {
-  CREATED_USER,
-  USER_ACTIVATED,
-  USER_DEACTIVATED,
-} from 'src/utils/user/messages.user';
+import { USER_ACTIVATED, USER_DEACTIVATED } from 'src/utils/user/messages.user';
 import { UserRows } from './dto/userRows.dto';
 import { ForgetPasswordDto } from './dto/send-reset-password.dto';
 import { NewPasswordDto } from './dto/new-password.dto';
 import { FilterNewPasswordDto } from './dto/filter-new-password.dto';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { UserFromJwt } from '../auth/models/UserFromJwt';
 
+import {
+  ApiBearerAuth,
+  ApiConflictResponse,
+  ApiCreatedResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { RecordWithId } from './dto/record-with-id.dto';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { UserFromJwt } from 'src/auth/models/UserFromJwt';
+
+@ApiTags('Users')
 @Controller('user')
 export class UserController {
   constructor(private readonly userServices: UserServices) {}
 
   @IsPublic()
   @Post()
+  @ApiCreatedResponse({ description: 'Endpoint used to create an user' })
+  @ApiConflictResponse({ description: 'Already exists user with this email' })
   @HttpCode(HttpStatus.CREATED)
   async createUser(
     @Body() data: UserDto,
     @Req() request: Request,
-    @Res() response: Response,
-  ): Promise<Response<UserDto>> {
-    const user = await this.userServices.createUser(data, request);
-
-    return response.json({
-      message: CREATED_USER,
-      row: user,
-    });
+  ): Promise<RecordWithId> {
+    return await this.userServices.createUser(data, request);
   }
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  async listUsers(
-    @Res() response: Response,
-    @CurrentUser() user: UserFromJwt,
-  ): Promise<Response<UserRows>> {
-    const users = await this.userServices.listUsers();
+  @ApiBearerAuth('access_token')
+  async listUsers(): Promise<UserRows> {
+    return await this.userServices.listUsers();
+  }
 
-    return response.json(users);
+  @Get('/profile')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('access_token')
+  async userProfile(@CurrentUser() user: UserFromJwt) {
+    return await this.userServices.userProfile(user.id);
   }
 
   @Patch('/update/:userId')
