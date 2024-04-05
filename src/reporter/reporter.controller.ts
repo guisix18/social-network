@@ -13,7 +13,9 @@ import { ReporterService } from './reporter.service';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { UserFromJwt } from 'src/auth/models/UserFromJwt';
 import { ReporterDto } from './dto/reporter.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Reporter/Relate Users')
 @Controller('report')
 export class ReporterController {
   constructor(private readonly reporterServices: ReporterService) {}
