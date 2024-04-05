@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateUserDto, UserDto } from './dto/user.dto';
-import { Prisma } from '@prisma/client';
+import { Prisma, User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { UserRows } from './dto/userRows.dto';
 import { Request } from 'express';
@@ -20,6 +20,7 @@ import { USER_NOT_FOUND } from '../utils/user/exceptions.user';
 import { MailerServices } from '../mailer/mailer.service';
 import { NO_USER_DATA_TO_VALIDATE } from '../utils/user/messages.user';
 import { PrismaUserRepository } from '../repositories/prisma/prisma.user.repository';
+import { RecordWithId } from './dto/record-with-id.dto';
 
 @Injectable()
 export class UserServices {
@@ -31,7 +32,7 @@ export class UserServices {
     private readonly userRepository: PrismaUserRepository,
   ) {}
 
-  async createUser(dto: UserDto, request: Request): Promise<UserDto> {
+  async createUser(dto: UserDto, request: Request): Promise<RecordWithId> {
     const user = await this.userRepository.createUser(dto);
 
     this.logger.log('User created');
@@ -48,7 +49,9 @@ export class UserServices {
 
     this.logger.log('Email to verify account has been sent');
 
-    return user;
+    return {
+      id: user.id,
+    };
   }
 
   async listUsers(): Promise<UserRows> {
@@ -56,6 +59,10 @@ export class UserServices {
     const users = await this.userRepository.listUsers();
 
     return users;
+  }
+
+  async userProfile(userId: string): Promise<User> {
+    return this.userRepository.userProfile(userId);
   }
 
   async findByEmail(email: string): Promise<UserDto> {
