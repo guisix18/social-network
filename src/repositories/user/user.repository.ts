@@ -9,4 +9,5 @@ export abstract class UserRepository {
   abstract updateUser(dto: UpdateUserDto, userId: string): Promise<UserDto>;
   abstract listOneUser(userId: string): Promise<User>;
   abstract findByEmail(email: string): Promise<User>;
+  abstract userProfile(userId: string): Promise<User>;
 }
