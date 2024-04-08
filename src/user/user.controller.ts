@@ -25,6 +25,8 @@ import {
   ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { RecordWithId } from './dto/record-with-id.dto';
@@ -38,7 +40,10 @@ export class UserController {
 
   @IsPublic()
   @Post()
-  @ApiCreatedResponse({ description: 'Endpoint used to create an user' })
+  @ApiCreatedResponse({
+    description:
+      'Containing the user identificatio and the email will be set to the informed sender(verify account)',
+  })
   @ApiConflictResponse({ description: 'Already exists user with this email' })
   @HttpCode(HttpStatus.CREATED)
   async createUser(
@@ -51,6 +56,7 @@ export class UserController {
   @Get()
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth('access_token')
+  @ApiOkResponse({ description: 'List all users or return a empty structure' })
   async listUsers(): Promise<UserRows> {
     return await this.userServices.listUsers();
   }
@@ -58,12 +64,18 @@ export class UserController {
   @Get('/profile')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth('access_token')
+  @ApiOkResponse({
+    description: 'Listing profile with some information for a specific user',
+  })
+  @ApiNotFoundResponse({ description: 'User not found' })
   async userProfile(@CurrentUser() user: UserFromJwt) {
     return await this.userServices.userProfile(user.id);
   }
 
   @Patch('/update/:userId')
   @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ description: 'Uptade user informations' })
+  @ApiNotFoundResponse({ description: 'User not found' })
   async updateUser(
     @Body() data: UpdateUserDto,
     @Param('userId') userId: string,
@@ -76,6 +88,8 @@ export class UserController {
 
   @Patch('/deactivate/:userId')
   @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ description: 'Deactivate user' })
+  @ApiNotFoundResponse({ description: 'User not found' })
   async deactivateUser(
     @Param('userId') userId: string,
     @Res() response: Response,
@@ -90,6 +104,8 @@ export class UserController {
 
   @Patch('activate/:userId')
   @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ description: 'Activate user' })
+  @ApiNotFoundResponse({ description: 'User not found' })
   async activateUser(
     @Param('userId') userId: string,
     @Res() response: Response,
@@ -105,6 +121,10 @@ export class UserController {
   @IsPublic()
   @Post('/send-reset-password')
   @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({
+    description:
+      'When everything is ok, the email will be sent to the informed sender',
+  })
   async forgetPassword(
     @Body() data: ForgetPasswordDto,
     @Req() request: Request,
@@ -119,6 +139,9 @@ export class UserController {
 
   @IsPublic()
   @Patch('/new-password')
+  @ApiOkResponse({
+    description: 'When the JWT is the expected, the passowrd will be changed',
+  })
   async newPassword(
     @Body() data: NewPasswordDto,
     @Res() response: Response,
@@ -133,6 +156,10 @@ export class UserController {
 
   @IsPublic()
   @Get('/verify-user')
+  @ApiOkResponse({
+    description:
+      'When the verification ID is the expected, your account will be validated',
+  })
   async verifyUserAccount(
     @Res() response: Response,
     @Query('verificationId') verificationId: string,
