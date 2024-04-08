@@ -10,7 +10,7 @@ import {
   Patch,
 } from '@nestjs/common';
 
-import { Response, response } from 'express';
+import { Response } from 'express';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { UserFromJwt } from 'src/auth/models/UserFromJwt';
 import { PostsDto } from './dto/posts.dto';
