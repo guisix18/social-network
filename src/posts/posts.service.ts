@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { UserFromJwt } from '../auth/models/UserFromJwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { PostsDto } from './dto/posts.dto';
@@ -6,7 +6,8 @@ import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PostsLikedsDto } from './dto/postsLikeds.dto';
 import { PrismaPostRepository } from '../repositories/prisma/prisma.post.repository';
-import { FiltersPostFeedbacksDto } from './dto/filtersPostsFeedback.dto';
+import { FiltersPostDto } from './dto/filters-post.dto';
+import { POST_NOT_FOUND } from 'src/utils/posts/exceptions.posts';
 
 @Injectable()
 export class PostsServices {
@@ -23,26 +24,22 @@ export class PostsServices {
     return this.postRepository.listPosts();
   }
 
-  async listOnePost(postId: string): Promise<PostsDto> {
+  async listOnePost(filters: FiltersPostDto): Promise<PostsDto> {
+    const { postId } = filters;
+
     return this.postRepository.listOnePost(postId);
   }
 
   async likedPost(
-    filters: FiltersPostFeedbacksDto,
+    filters: FiltersPostDto,
     user: UserFromJwt,
   ): Promise<PostsLikedsDto> {
     const { postId, likeId } = filters;
 
-    const history = await this.prisma.postLikeds.findUnique({
-      where: {
-        id: likeId,
-        userId: user.id,
-        postId,
-      },
-    });
-
-    if (!likeId && !history) {
+    if (!likeId) {
       const post = await this.postRepository.listOnePost(postId);
+
+      if (!post) throw new NotFoundException(POST_NOT_FOUND);
 
       const data: Prisma.PostLikedsCreateInput = {
         id: randomUUID(),
@@ -59,20 +56,28 @@ export class PostsServices {
       return likedPost;
     }
 
-    if (history) {
-      const likedStatus = !history.liked;
-      return await this.prisma.postLikeds.update({
-        where: {
-          id: history.id,
-        },
-        data: {
-          liked: likedStatus,
-        },
-      });
-    }
+    const history = await this.prisma.postLikeds.findFirst({
+      where: {
+        id: likeId,
+        userId: user.id,
+        postId,
+      },
+    });
+
+    if (!history) throw new NotFoundException('We do not found a history');
+
+    const likedStatus = !history.liked;
+    return await this.prisma.postLikeds.update({
+      where: {
+        id: likeId,
+      },
+      data: {
+        liked: likedStatus,
+      },
+    });
   }
 
-  async countLikes(filters: FiltersPostFeedbacksDto): Promise<number> {
+  async countLikes(filters: FiltersPostDto): Promise<number> {
     const { postId } = filters;
 
     const count = await this.prisma.postLikeds.count({
