@@ -4,5 +4,4 @@ export const select = {
   userId: true,
   imageUrl: true,
   imageFormat: true,
-  comments: true,
 };
