@@ -16,7 +16,4 @@ export class PostsDto {
   @IsOptional()
   @IsUrl()
   imageUrl?: string;
-
-  @IsOptional()
-  comments?: Comments[];
 }
