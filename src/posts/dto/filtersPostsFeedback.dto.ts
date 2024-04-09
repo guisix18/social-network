@@ -1,14 +1,12 @@
-import { Transform, TransformFnParams } from 'class-transformer';
-import { IsBIC, IsBoolean, IsOptional, IsString } from 'class-validator';
+import { IsObject, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class FiltersPostFeedbacksDto {
   @IsString()
+  @IsUUID()
   postId: string;
 
   @IsOptional()
-  @IsBoolean()
-  @Transform((params: TransformFnParams) =>
-    params.value === 'true' ? true : false,
-  )
-  checked?: boolean;
+  @IsString()
+  @IsUUID()
+  likeId?: string;
 }
