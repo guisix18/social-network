@@ -28,11 +28,25 @@ export class PrismaPostRepository implements PostRepository {
   }
 
   async listPosts(): Promise<PostsDto[]> {
-    const posts = this.prisma.post.findMany({
-      select,
+    const posts = await this.prisma.post.findMany({
+      include: {
+        postsLikeds: {
+          where: {
+            liked: true,
+          },
+        },
+      },
     });
 
-    return posts;
+    console.log(posts);
+
+    const postWithLikes = posts.map((post) => ({
+      ...post,
+      likes: post.postsLikeds.length,
+      postsLikeds: undefined,
+    }));
+
+    return postWithLikes;
   }
 
   async listOnePost(postId: string): Promise<Post> {
