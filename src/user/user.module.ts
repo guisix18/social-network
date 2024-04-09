@@ -12,7 +12,6 @@ import { VerifyUserIdMiddleware } from './middleware/verifyUserId.middleware';
 import { JwtModule } from '@nestjs/jwt';
 import { MailerServices } from '../mailer/mailer.service';
 import { MailerServicesModule } from '../mailer/mailer.module';
-import { BullModule } from '@nestjs/bull';
 import { RedisService } from '../config/redis.config';
 import { UserRepository } from '../repositories/user/user.repository';
 import { PrismaUserRepository } from '../repositories/prisma/prisma.user.repository';
@@ -34,7 +33,10 @@ import { RedisUserRepository } from '../repositories/cache/redis-user-cache.repo
     RedisService,
     PrismaUserRepository,
     RedisUserRepository,
-    { provide: UserRepository, useClass: PrismaUserRepository },
+    {
+      provide: UserRepository,
+      useClass: PrismaUserRepository,
+    },
   ],
   exports: [UserServices, JwtModule, MailerServices, PrismaUserRepository],
 })
