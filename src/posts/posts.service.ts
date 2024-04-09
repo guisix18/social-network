@@ -1,103 +1,80 @@
 import { Injectable } from '@nestjs/common';
-import { UserFromJwt } from 'src/auth/models/UserFromJwt';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { UserFromJwt } from '../auth/models/UserFromJwt';
+import { PrismaService } from '../prisma/prisma.service';
 import { PostsDto } from './dto/posts.dto';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
-import { select } from 'src/utils/posts/select.posts';
 import { PostsLikedsDto } from './dto/postsLikeds.dto';
+import { PrismaPostRepository } from '../repositories/prisma/prisma.post.repository';
+import { FiltersPostFeedbacksDto } from './dto/filtersPostsFeedback.dto';
 
 @Injectable()
 export class PostsServices {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly postRepository: PrismaPostRepository,
+  ) {}
 
   async createPost(dto: PostsDto, user: UserFromJwt): Promise<PostsDto> {
-    const data: Prisma.PostCreateInput = {
-      id: randomUUID(),
-      content: dto.content,
-      imageUrl: dto.imageUrl && dto.imageUrl,
-      user: { connect: { id: user.id } },
-    };
-
-    const post = await this.prisma.post.create({
-      data,
-    });
-
-    return post;
+    return this.postRepository.createPost(dto, user);
   }
 
   async listPosts(): Promise<PostsDto[]> {
-    const posts = await this.prisma.post.findMany({
-      select,
-    });
-
-    return posts;
+    return this.postRepository.listPosts();
   }
 
   async listOnePost(postId: string): Promise<PostsDto> {
-    return await this.prisma.post.findUnique({
-      where: {
-        id: postId,
-      },
-    });
+    return this.postRepository.listOnePost(postId);
   }
 
   async likedPost(
-    postId: string,
+    filters: FiltersPostFeedbacksDto,
     user: UserFromJwt,
-    checked: boolean,
   ): Promise<PostsLikedsDto> {
-    console.log(checked);
+    const { postId, likeId } = filters;
 
-    const findLike = await this.prisma.postLikeds.findFirst({
+    const history = await this.prisma.postLikeds.findUnique({
       where: {
+        id: likeId,
         userId: user.id,
+        postId,
       },
     });
 
-    if (findLike) {
-      if (!checked) {
-        return await this.prisma.postLikeds.update({
-          where: {
-            id: findLike.id,
-          },
-          data: {
-            liked: false,
-          },
-        });
-      }
+    if (!likeId && !history) {
+      const post = await this.postRepository.listOnePost(postId);
+
+      const data: Prisma.PostLikedsCreateInput = {
+        id: randomUUID(),
+        eventAt: new Date(),
+        liked: true,
+        user: { connect: { id: user.id } },
+        post: { connect: { id: post.id } },
+      };
+
+      const likedPost = await this.prisma.postLikeds.create({
+        data,
+      });
+
+      return likedPost;
+    }
+
+    if (history) {
+      const likedStatus = !history.liked;
       return await this.prisma.postLikeds.update({
         where: {
-          id: findLike.id,
+          id: history.id,
         },
         data: {
-          liked: true,
+          liked: likedStatus,
         },
       });
     }
-
-    const post = await this.prisma.post.findUnique({
-      where: {
-        id: postId,
-      },
-    });
-
-    const data: Prisma.PostLikedsCreateInput = {
-      id: randomUUID(),
-      eventAt: new Date(),
-      liked: true,
-      user: { connect: { id: user.id } },
-      post: { connect: { id: post.id } },
-    };
-
-    const likedPost = await this.prisma.postLikeds.create({
-      data,
-    });
-
-    return likedPost;
   }
 
-  async countLikes(postId: string): Promise<number> {
+  async countLikes(filters: FiltersPostFeedbacksDto): Promise<number> {
+    const { postId } = filters;
+
     const count = await this.prisma.postLikeds.count({
       where: {
         postId,
