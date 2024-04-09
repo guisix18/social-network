@@ -22,7 +22,7 @@ export class CommentsServices {
     user: UserFromJwt,
     postId: string,
   ): Promise<CommentsDto> {
-    const post = await this.postServices.listOnePost(postId);
+    const post = await this.postServices.listOnePost({ postId });
 
     if (!post) {
       throw new HttpException(POST_NOT_FOUND, 404);
