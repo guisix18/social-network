@@ -7,13 +7,14 @@ import {
   Post,
   Query,
   Patch,
+  Param,
 } from '@nestjs/common';
 
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { UserFromJwt } from 'src/auth/models/UserFromJwt';
 import { PostsDto } from './dto/posts.dto';
 import { PostsServices } from './posts.service';
-import { FiltersPostFeedbacksDto } from './dto/filtersPostsFeedback.dto';
+import { FiltersPostDto } from './dto/filters-post.dto';
 import { PostsLikedsDto } from './dto/postsLikeds.dto';
 import { ApiTags } from '@nestjs/swagger';
 
@@ -37,10 +38,16 @@ export class PostsController {
     return await this.postsServices.listPosts();
   }
 
+  @Get('/:postId')
+  @HttpCode(HttpStatus.OK)
+  async listOnePost(@Param() filters: FiltersPostDto) {
+    return await this.postsServices.listOnePost(filters);
+  }
+
   @Patch('/like')
   @HttpCode(HttpStatus.OK)
   async likedPost(
-    @Query() filters: FiltersPostFeedbacksDto,
+    @Query() filters: FiltersPostDto,
     @CurrentUser() user: UserFromJwt,
   ): Promise<PostsLikedsDto> {
     return await this.postsServices.likedPost(filters, user);
@@ -48,7 +55,7 @@ export class PostsController {
 
   @Get('/count/likes')
   @HttpCode(HttpStatus.OK)
-  async countLikes(@Query() filters: FiltersPostFeedbacksDto) {
+  async countLikes(@Query() filters: FiltersPostDto) {
     return await this.postsServices.countLikes(filters);
   }
 }
