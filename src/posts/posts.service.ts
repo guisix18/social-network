@@ -7,7 +7,11 @@ import { randomUUID } from 'crypto';
 import { PostsLikedsDto } from './dto/postsLikeds.dto';
 import { PrismaPostRepository } from '../repositories/prisma/prisma.post.repository';
 import { FiltersPostDto } from './dto/filters-post.dto';
-import { POST_NOT_FOUND } from 'src/utils/posts/exceptions.posts';
+import {
+  HISTORY_NOT_FOUND,
+  POST_NOT_FOUND,
+} from 'src/utils/posts/exceptions.posts';
+import { Posts } from './interfaces/posts.interface';
 
 @Injectable()
 export class PostsServices {
@@ -20,7 +24,7 @@ export class PostsServices {
     return this.postRepository.createPost(dto, user);
   }
 
-  async listPosts(): Promise<PostsDto[]> {
+  async listPosts(): Promise<Posts[]> {
     return this.postRepository.listPosts();
   }
 
@@ -64,7 +68,7 @@ export class PostsServices {
       },
     });
 
-    if (!history) throw new NotFoundException('We do not found a history');
+    if (!history) throw new NotFoundException(HISTORY_NOT_FOUND);
 
     const likedStatus = !history.liked;
     return await this.prisma.postLikeds.update({
@@ -77,12 +81,13 @@ export class PostsServices {
     });
   }
 
-  async countLikes(filters: FiltersPostDto): Promise<number> {
-    const { postId } = filters;
-
+  //Esse serviço provavelmente é inútil
+  //Agora tem utilidade, sei lá, quando o usuário for olhar o perfil dele e ver quantas curtidas ele já deu como todo(só de posts até então)
+  //Mas o interessante seria rodar isso no profile né? Para não ter que chamar o banco duas vezes. Na verdade, melhor ainda, disparar as duas ao mesmo tempo pois uma não tem relação com a outra
+  async countLikes(user: UserFromJwt): Promise<number> {
     const count = await this.prisma.postLikeds.count({
       where: {
-        postId,
+        userId: user.id,
         liked: true,
       },
     });
