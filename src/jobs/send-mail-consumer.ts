@@ -10,7 +10,7 @@ interface IJobBody {
 }
 
 //Aqui é onde está o processamento de job
-//Simples e funcional, para casos em produção teria que estudar em como manter essa estrutura de pé
+//Simples e funcional, para casos em produção teria que estudar em como manter essa estrutura de pé, qual serviço subir isso aqui e essas coisas eu sinceramente ainda não sei. Ao menos osm princípios estão aqui
 //O bom é o ganho considerável de velocidade, uma vez que pra consultar o sendEmail do mailer demora cerca de 4 segundos pro envio acontecer
 //Graças ao JOB(BOA JOB), o meu código é retornado normalmente pro usuário(que não precisa saber que o envio está rolando por debaixo dos panos)
 @Processor('send-email-queue')
