@@ -10,12 +10,14 @@ import {
   Res,
 } from '@nestjs/common';
 import { CommentsServices } from './comments.service';
-import { Response, response } from 'express';
+import { Response } from 'express';
 import { CommentsDto } from './dto/comments.dto';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { UserFromJwt } from 'src/auth/models/UserFromJwt';
 import { FiltersCommentsDto } from './dto/filtersComments.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Comments')
 @Controller('comments')
 export class CommentsController {
   constructor(private readonly commentsServices: CommentsServices) {}

@@ -1,12 +1,10 @@
 export const select = {
   id: true,
-  createdAt: true,
   name: true,
   email: true,
+  createdAt: true,
   password: false,
   resetToken: false,
   updatedAt: true,
   active: true,
-  posts: true,
-  blockedAt: true,
 };

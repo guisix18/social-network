@@ -4,16 +4,25 @@ import {
   NestModule,
   RequestMethod,
 } from '@nestjs/common';
-import { PrismaModule } from 'src/prisma/prisma.module';
+import { PrismaModule } from '../prisma/prisma.module';
 import { PostsController } from './posts.controller';
 import { PostsServices } from './posts.service';
 import { VerifyFiltersFeedbacksMiddlewares } from './middleware/verifyFiltersFeedbacks.middleware';
+import { PrismaPostRepository } from '../repositories/prisma/prisma.post.repository';
+import { PostRepository } from '../repositories/posts/prisma.repository';
 
 @Module({
   imports: [PrismaModule],
   controllers: [PostsController],
-  providers: [PostsServices],
-  exports: [PostsServices],
+  providers: [
+    PostsServices,
+    PrismaPostRepository,
+    {
+      provide: PostRepository,
+      useClass: PrismaPostRepository,
+    },
+  ],
+  exports: [PostsServices, PrismaPostRepository],
 })
 export class PostsModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

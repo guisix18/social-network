@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateUserDto, UserDto } from './dto/user.dto';
-import { Prisma } from '@prisma/client';
+import { Prisma, User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { UserRows } from './dto/userRows.dto';
 import { Request } from 'express';
@@ -20,6 +20,7 @@ import { USER_NOT_FOUND } from '../utils/user/exceptions.user';
 import { MailerServices } from '../mailer/mailer.service';
 import { NO_USER_DATA_TO_VALIDATE } from '../utils/user/messages.user';
 import { PrismaUserRepository } from '../repositories/prisma/prisma.user.repository';
+import { RecordWithId } from './dto/record-with-id.dto';
 
 @Injectable()
 export class UserServices {
@@ -31,7 +32,7 @@ export class UserServices {
     private readonly userRepository: PrismaUserRepository,
   ) {}
 
-  async createUser(dto: UserDto, request: Request): Promise<UserDto> {
+  async createUser(dto: UserDto, request: Request): Promise<RecordWithId> {
     const user = await this.userRepository.createUser(dto);
 
     this.logger.log('User created');
@@ -48,7 +49,9 @@ export class UserServices {
 
     this.logger.log('Email to verify account has been sent');
 
-    return user;
+    return {
+      id: user.id,
+    };
   }
 
   async listUsers(): Promise<UserRows> {
@@ -58,17 +61,14 @@ export class UserServices {
     return users;
   }
 
+  async userProfile(userId: string): Promise<User> {
+    return this.userRepository.userProfile(userId);
+  }
+
   async findByEmail(email: string): Promise<UserDto> {
     this.logger.log('Find by email when trying to login');
 
-    return await this.prisma.user.findUnique({
-      where: {
-        email,
-      },
-      include: {
-        verifyAccount: true,
-      },
-    });
+    return this.userRepository.findByEmail(email);
   }
 
   async updateUser(data: UpdateUserDto, userId: string): Promise<UserDto> {
@@ -116,11 +116,7 @@ export class UserServices {
     request: Request,
     dto: ForgetPasswordDto,
   ): Promise<void> {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        email: dto.email,
-      },
-    });
+    const user = await this.userRepository.findByEmail(dto.email);
 
     if (!user) throw new HttpException(USER_NOT_FOUND, HttpStatus.NOT_FOUND);
 

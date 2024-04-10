@@ -1,106 +1,93 @@
-import { Injectable } from '@nestjs/common';
-import { UserFromJwt } from 'src/auth/models/UserFromJwt';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { UserFromJwt } from '../auth/models/UserFromJwt';
+import { PrismaService } from '../prisma/prisma.service';
 import { PostsDto } from './dto/posts.dto';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
-import { select } from 'src/utils/posts/select.posts';
 import { PostsLikedsDto } from './dto/postsLikeds.dto';
+import { PrismaPostRepository } from '../repositories/prisma/prisma.post.repository';
+import { FiltersPostDto } from './dto/filters-post.dto';
+import {
+  HISTORY_NOT_FOUND,
+  POST_NOT_FOUND,
+} from 'src/utils/posts/exceptions.posts';
+import { Posts } from './interfaces/posts.interface';
 
 @Injectable()
 export class PostsServices {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly postRepository: PrismaPostRepository,
+  ) {}
 
   async createPost(dto: PostsDto, user: UserFromJwt): Promise<PostsDto> {
-    const data: Prisma.PostCreateInput = {
-      id: randomUUID(),
-      content: dto.content,
-      imageUrl: dto.imageUrl && dto.imageUrl,
-      user: { connect: { id: user.id } },
-    };
-
-    const post = await this.prisma.post.create({
-      data,
-    });
-
-    return post;
+    return this.postRepository.createPost(dto, user);
   }
 
-  async listPosts(): Promise<PostsDto[]> {
-    const posts = await this.prisma.post.findMany({
-      select,
-    });
-
-    return posts;
+  async listPosts(): Promise<Posts[]> {
+    return this.postRepository.listPosts();
   }
 
-  async listOnePost(postId: string): Promise<PostsDto> {
-    return await this.prisma.post.findUnique({
-      where: {
-        id: postId,
-      },
-    });
+  async listOnePost(filters: FiltersPostDto): Promise<PostsDto> {
+    const { postId } = filters;
+
+    return this.postRepository.listOnePost(postId);
   }
 
   async likedPost(
-    postId: string,
+    filters: FiltersPostDto,
     user: UserFromJwt,
-    checked: string,
   ): Promise<PostsLikedsDto> {
-    const validate: boolean = checked === 'true';
+    const { postId, likeId } = filters;
 
-    const findLike = await this.prisma.postLikeds.findFirst({
-      where: {
-        userId: user.id,
-      },
-    });
+    if (!likeId) {
+      const post = await this.postRepository.listOnePost(postId);
 
-    if (findLike) {
-      if (!validate) {
-        return await this.prisma.postLikeds.update({
-          where: {
-            id: findLike.id,
-          },
-          data: {
-            liked: false,
-          },
-        });
-      }
-      return await this.prisma.postLikeds.update({
-        where: {
-          id: findLike.id,
-        },
-        data: {
-          liked: true,
-        },
+      if (!post) throw new NotFoundException(POST_NOT_FOUND);
+
+      const data: Prisma.PostLikedsCreateInput = {
+        id: randomUUID(),
+        eventAt: new Date(),
+        liked: true,
+        user: { connect: { id: user.id } },
+        post: { connect: { id: post.id } },
+      };
+
+      const likedPost = await this.prisma.postLikeds.create({
+        data,
       });
+
+      return likedPost;
     }
 
-    const post = await this.prisma.post.findUnique({
+    const history = await this.prisma.postLikeds.findFirst({
       where: {
-        id: postId,
+        id: likeId,
+        userId: user.id,
+        postId,
       },
     });
 
-    const data: Prisma.PostLikedsCreateInput = {
-      id: randomUUID(),
-      eventAt: new Date(),
-      liked: true,
-      user: { connect: { id: user.id } },
-      post: { connect: { id: post.id } },
-    };
+    if (!history) throw new NotFoundException(HISTORY_NOT_FOUND);
 
-    const likedPost = await this.prisma.postLikeds.create({
-      data,
+    const likedStatus = !history.liked;
+    return await this.prisma.postLikeds.update({
+      where: {
+        id: likeId,
+      },
+      data: {
+        liked: likedStatus,
+      },
     });
-
-    return likedPost;
   }
 
-  async countLikes(postId: string): Promise<number> {
+  //Esse serviço provavelmente é inútil
+  //Agora tem utilidade, sei lá, quando o usuário for olhar o perfil dele e ver quantas curtidas ele já deu como todo(só de posts até então)
+  //Mas o interessante seria rodar isso no profile né? Para não ter que chamar o banco duas vezes. Na verdade, melhor ainda, disparar as duas ao mesmo tempo pois uma não tem relação com a outra
+  async countLikes(user: UserFromJwt): Promise<number> {
     const count = await this.prisma.postLikeds.count({
       where: {
-        postId,
+        userId: user.id,
         liked: true,
       },
     });

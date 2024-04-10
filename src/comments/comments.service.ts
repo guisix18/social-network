@@ -22,7 +22,7 @@ export class CommentsServices {
     user: UserFromJwt,
     postId: string,
   ): Promise<CommentsDto> {
-    const post = await this.postServices.listOnePost(postId);
+    const post = await this.postServices.listOnePost({ postId });
 
     if (!post) {
       throw new HttpException(POST_NOT_FOUND, 404);
@@ -143,10 +143,18 @@ export class CommentsServices {
             children: true,
           },
         },
+        _count: {
+          select: {
+            children: true,
+          },
+        },
       },
     });
 
-    return topLevelComments.map((comment) => this.formatComment(comment));
+    return topLevelComments.map((comment) => ({
+      ...this.formatComment(comment),
+      comments: comment._count.children,
+    }));
   }
 
   //Acho que vou ter que passar isso para ser uma query, já que prisma não tem o próprio método recursivo
