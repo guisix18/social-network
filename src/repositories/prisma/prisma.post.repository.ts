@@ -4,9 +4,9 @@ import { PostRepository } from '../posts/prisma.repository';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Post, Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
-import { select } from '../../utils/posts/select.posts';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { POST_NOT_FOUND } from '../../utils/posts/exceptions.posts';
+import { Posts } from 'src/posts/interfaces/posts.interface';
 
 @Injectable()
 export class PrismaPostRepository implements PostRepository {
@@ -27,23 +27,30 @@ export class PrismaPostRepository implements PostRepository {
     return post;
   }
 
-  async listPosts(): Promise<PostsDto[]> {
+  async listPosts(): Promise<Posts[]> {
     const posts = await this.prisma.post.findMany({
-      include: {
-        postsLikeds: {
-          where: {
-            liked: true,
+      select: {
+        id: true,
+        content: true,
+        imageUrl: true,
+        _count: {
+          select: {
+            comments: true,
+            postsLikeds: {
+              where: {
+                liked: true,
+              },
+            },
           },
         },
       },
     });
 
-    console.log(posts);
-
     const postWithLikes = posts.map((post) => ({
       ...post,
-      likes: post.postsLikeds.length,
-      postsLikeds: undefined,
+      likes: post._count.postsLikeds,
+      comments: post._count.comments,
+      _count: undefined,
     }));
 
     return postWithLikes;
