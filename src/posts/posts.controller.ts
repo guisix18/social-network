@@ -17,6 +17,7 @@ import { PostsServices } from './posts.service';
 import { FiltersPostDto } from './dto/filters-post.dto';
 import { PostsLikedsDto } from './dto/postsLikeds.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { Posts } from './interfaces/posts.interface';
 
 @ApiTags('Posts')
 @Controller('posts')
@@ -34,7 +35,7 @@ export class PostsController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  async listPosts(): Promise<PostsDto[]> {
+  async listPosts(): Promise<Posts[]> {
     return await this.postsServices.listPosts();
   }
 
@@ -55,7 +56,7 @@ export class PostsController {
 
   @Get('/count/likes')
   @HttpCode(HttpStatus.OK)
-  async countLikes(@Query() filters: FiltersPostDto) {
-    return await this.postsServices.countLikes(filters);
+  async countLikes(@CurrentUser() user: UserFromJwt) {
+    return await this.postsServices.countLikes(user);
   }
 }
