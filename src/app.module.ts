@@ -10,19 +10,9 @@ import { ReporterModule } from './reporter/reporter.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CacheModule, CacheModuleOptions } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-store';
-import { MailerModule } from '@nestjs-modules/mailer';
-import { MailerServicesModule } from './mailer/mailer.module';
-import { BullModule } from '@nestjs/bull';
-import { SendMailConsumer } from './jobs/send-mail-consumer';
 
 @Module({
   imports: [
-    BullModule.forRoot({
-      redis: {
-        host: 'localhost',
-        port: 6379,
-      },
-    }),
     PrismaModule,
     UserModule,
     PostsModule,
@@ -36,17 +26,6 @@ import { SendMailConsumer } from './jobs/send-mail-consumer';
       }),
       isGlobal: true,
     }),
-    MailerModule.forRoot({
-      transport: {
-        host: 'smtp.gmail.com',
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      },
-    }),
-    MailerServicesModule,
-    SendMailConsumer,
   ],
   providers: [
     {
