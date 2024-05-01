@@ -2,6 +2,7 @@ import {
   BadRequestException,
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
   Logger,
 } from '@nestjs/common';
@@ -17,10 +18,11 @@ import { ForgetPasswordDto } from './dto/send-reset-password.dto';
 import { NewPasswordDto } from './dto/new-password.dto';
 import { FilterNewPasswordDto } from './dto/filter-new-password.dto';
 import { USER_NOT_FOUND } from '../utils/user/exceptions.user';
-import { MailerServices } from '../mailer/mailer.service';
 import { NO_USER_DATA_TO_VALIDATE } from '../utils/user/messages.user';
 import { PrismaUserRepository } from '../repositories/prisma/prisma.user.repository';
 import { RecordWithId } from './dto/record-with-id.dto';
+import { ClientKafka } from '@nestjs/microservices';
+import { lastValueFrom } from 'rxjs';
 
 @Injectable()
 export class UserServices {
@@ -28,7 +30,7 @@ export class UserServices {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
-    private readonly mailerServices: MailerServices,
+    @Inject('MAILER_SERVICE') private readonly mailerClient: ClientKafka,
     private readonly userRepository: PrismaUserRepository,
   ) {}
 
@@ -45,7 +47,7 @@ export class UserServices {
       },
     });
 
-    await this.mailerServices.sendVerifyAccount(user, request, verification.id);
+    // await this.mailerServices.sendVerifyAccount(user, request, verification.id);
 
     this.logger.log('Email to verify account has been sent');
 
@@ -142,7 +144,25 @@ export class UserServices {
     });
 
     this.logger.log('Sending email');
-    return await this.mailerServices.sendForgetPassword(userWithToken, request);
+
+    const dataToMailer = {
+      user: {
+        name: userWithToken.name,
+        email: userWithToken.email,
+        resetToken: userWithToken.resetToken,
+      },
+      request: {
+        protocol: request.protocol,
+        host: request.get('Host'),
+        originalUrl: request.originalUrl,
+      },
+    };
+
+    await lastValueFrom(
+      this.mailerClient.emit('send_forgot_email', dataToMailer),
+    );
+
+    return;
   }
 
   async newPassword(
